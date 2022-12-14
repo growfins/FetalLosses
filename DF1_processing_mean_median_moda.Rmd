@@ -1,0 +1,596 @@
+---
+title: "DF1_processing_mean_median_moda"
+author: "Evgeniia Molokova"
+date: "2022-12-13"
+output: html_document
+---
+
+# Настройка библиотек
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library (dplyr)
+library (tibble)
+library (readr)
+library (readxl)
+library (ggplot2)
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 1. Загрузка отфильтрованного датафрейма df1
+```{r}
+df1 <- read_csv("df1_csv.csv")
+df1 <- as.tibble(df1)
+
+summary(df1)
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 2.1 Замена пропущенных значений в количественных переменных на средние значения и создание нового датасета df1_process_mean
+```{r}
+df1_process_mean <- df1 # Создание нового датасета 
+
+df1_process_mean$`Длина тела`[is.na(df1_process_mean$`Длина тела`)]<-mean(df1_process_mean$`Длина тела`,na.rm=TRUE) # Замена пропущенных значений в переменной "Длина тела"
+
+df1_process_mean$`Масса тела`[is.na(df1_process_mean$`Масса тела`)]<-mean(df1_process_mean$`Масса тела`,na.rm=TRUE) # Замена пропущенных значений в переменной "Масса тела"
+
+df1_process_mean$Мозг[is.na(df1_process_mean$Мозг)]<-mean(df1_process_mean$Мозг,na.rm=TRUE) # Замена пропущенных значений в переменной "Мозг"
+
+df1_process_mean$Сердце[is.na(df1_process_mean$Сердце)]<-mean(df1_process_mean$Сердце,na.rm=TRUE) # Замена пропущенных значений в переменной "Сердце"
+
+df1_process_mean$Лёгкие[is.na(df1_process_mean$Лёгкие)]<-mean(df1_process_mean$Лёгкие,na.rm=TRUE) # Замена пропущенных значений в переменной "Лёгкие"
+
+df1_process_mean$Печень[is.na(df1_process_mean$Печень)]<-mean(df1_process_mean$Печень,na.rm=TRUE) # Замена пропущенных значений в переменной "Печень"
+
+df1_process_mean$Селезёнка[is.na(df1_process_mean$Селезёнка)]<-mean(df1_process_mean$Селезёнка, na.rm=TRUE) # Замена пропущенных значений в переменной "Селезёнка"
+
+df1_process_mean$Почки[is.na(df1_process_mean$Почки)]<-mean(df1_process_mean$Почки,na.rm=TRUE) # Замена пропущенных значений в переменной "Почки"
+
+df1_process_mean$Тимус[is.na(df1_process_mean$Тимус)]<-mean(df1_process_mean$Тимус,na.rm=TRUE) # Замена пропущенных значений в переменной "Тимус"
+
+df1_process_mean$Надпочечники[is.na(df1_process_mean$Надпочечники)]<-mean(df1_process_mean$Надпочечники,na.rm=TRUE) # Замена пропущенных значений в переменной "Надпочечники"
+
+df1_process_mean$`Поджелудочная железа`[is.na(df1_process_mean$`Поджелудочная железа`)]<-mean(df1_process_mean$`Поджелудочная железа`,na.rm=TRUE) # Замена пропущенных значений в переменной "Поджелудочная железа"
+
+df1_process_mean$Плацента[is.na(df1_process_mean$Плацента)]<-mean(df1_process_mean$Плацента,na.rm=TRUE) # Замена пропущенных значений в переменной "Плацента"
+
+df1_process_mean$`Окружность головы`[is.na(df1_process_mean$`Окружность головы`)]<-mean(df1_process_mean$`Окружность головы`,na.rm=TRUE) # Замена пропущенных значений в переменной "Окружность головы"
+
+df1_process_mean$`Окружность груди`[is.na(df1_process_mean$`Окружность груди`)]<-mean(df1_process_mean$`Окружность груди`,na.rm=TRUE) # Замена пропущенных значений в переменной "Окружность груди"
+
+df1_process_mean <- df1_process_mean %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_mean)
+```
+
+&nbsp;
+
+
+&nbsp;
+# 2.2 Описательная статистика нового датафрейма df1_process_mean
+```{r}
+library (maditr)
+library (flextable)
+library (tidyr)
+
+statistics <- list(
+      `Количество субъектов` = ~length(.x),
+      `Количество (есть данные)` = ~sum(!is.na(.x)),
+      `Нет данных` = ~sum(is.na(.x)),
+      `Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `мин. - макс.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2))),
+      `Медиана` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", median(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Q1 - Q3` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2)))
+)
+
+
+
+df1_all_1 <- df1_process_mean %>%
+  mutate(`мёртвый/живой` = "Всего")
+
+df1_work_1 <- rbind(df1_process_mean, df1_all_1)
+
+stat_num_res <- df1_work_1 %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных") 
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 2.3 Сравнение нового датафрейма df1_process_mean с исходным датасетом df1
+```{r}
+res.length <- t.test(df1$`Длина тела`, df1_process_mean$`Длина тела`, alternative="two.sided")
+res.length$p.value
+res.length$conf.int
+```
+```{r}
+res.mass <- t.test(df1$`Масса тела`, df1_process_mean$`Масса тела`, alternative="two.sided")
+res.mass$p.value
+res.mass$conf.int
+```
+
+```{r}
+res.brain <- t.test(df1$Мозг, df1_process_mean$Мозг, alternative="two.sided")
+res.brain$p.value
+res.brain$conf.int
+```
+
+```{r}
+res.heart <- t.test(df1$Сердце, df1_process_mean$Сердце, alternative="two.sided")
+res.heart$p.value
+res.heart$conf.int
+```
+
+```{r}
+res.lung <- t.test(df1$Лёгкие, df1_process_mean$Лёгкие, alternative="two.sided")
+res.lung$p.value
+res.lung$conf.int
+```
+```{r}
+res.liver <- t.test(df1$Печень, df1_process_mean$Печень, alternative="two.sided")
+res.liver$p.value
+res.liver$conf.int
+```
+```{r}
+res.splen <- t.test(df1$Селезёнка, df1_process_mean$Селезёнка, alternative="two.sided")
+res.splen$p.value
+res.splen$conf.int
+```
+```{r}
+res.ren <- t.test(df1$Почки, df1_process_mean$Почки, alternative="two.sided")
+res.ren$p.value
+res.ren$conf.int
+```
+```{r}
+res.thimus <- t.test(df1$Тимус, df1_process_mean$Тимус, alternative="two.sided")
+res.thimus$p.value
+res.thimus$conf.int
+```
+```{r}
+res.supraren <- t.test(df1$Надпочечники, df1_process_mean$Надпочечники, alternative="two.sided")
+res.supraren$p.value
+res.supraren$conf.int
+```
+```{r}
+res.pancreas <- t.test(df1$`Поджелудочная железа`, df1_process_mean$`Поджелудочная железа`, alternative="two.sided")
+res.pancreas$p.value
+res.pancreas$conf.int
+```
+```{r}
+res.placenta <- t.test(df1$Плацента, df1_process_mean$Плацента, alternative="two.sided")
+res.placenta$p.value
+res.placenta$conf.int
+```
+```{r}
+res.head <- t.test(df1$`Окружность головы`, df1_process_mean$`Окружность головы`, alternative="two.sided")
+res.head$p.value
+res.head$conf.int
+```
+```{r}
+res.thorax <- t.test(df1$`Окружность груди`, df1_process_mean$`Окружность груди`, alternative="two.sided")
+res.thorax$p.value
+res.thorax$conf.int
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 3.1 Замена пропущенных значений в количественных переменных на медианы и создание нового датасета df1_process_median
+```{r}
+df1_process_median <- df1 # Создание нового датасета 
+
+df1_process_median$`Длина тела`[is.na(df1_process_median$`Длина тела`)]<-median(df1_process_median$`Длина тела`,na.rm=TRUE) # Замена пропущенных значений в переменной "Длина тела"
+
+df1_process_median$`Масса тела`[is.na(df1_process_median$`Масса тела`)]<-median(df1_process_median$`Масса тела`,na.rm=TRUE) # Замена пропущенных значений в переменной "Масса тела"
+
+df1_process_median$Мозг[is.na(df1_process_median$Мозг)]<-median(df1_process_median$Мозг,na.rm=TRUE) # Замена пропущенных значений в переменной "Мозг"
+
+df1_process_median$Сердце[is.na(df1_process_median$Сердце)]<-median(df1_process_median$Сердце,na.rm=TRUE) # Замена пропущенных значений в переменной "Сердце"
+
+df1_process_median$Лёгкие[is.na(df1_process_median$Лёгкие)]<-median(df1_process_median$Лёгкие,na.rm=TRUE) # Замена пропущенных значений в переменной "Лёгкие"
+
+df1_process_median$Печень[is.na(df1_process_median$Печень)]<-median(df1_process_median$Печень,na.rm=TRUE) # Замена пропущенных значений в переменной "Печень"
+
+df1_process_median$Селезёнка[is.na(df1_process_median$Селезёнка)]<-median(df1_process_median$Селезёнка, na.rm=TRUE) # Замена пропущенных значений в переменной "Селезёнка"
+
+df1_process_median$Почки[is.na(df1_process_median$Почки)]<-median(df1_process_median$Почки,na.rm=TRUE) # Замена пропущенных значений в переменной "Почки"
+
+df1_process_median$Тимус[is.na(df1_process_median$Тимус)]<-median(df1_process_median$Тимус,na.rm=TRUE) # Замена пропущенных значений в переменной "Тимус"
+
+df1_process_median$Надпочечники[is.na(df1_process_median$Надпочечники)]<-mean(df1_process_median$Надпочечники,na.rm=TRUE) # Замена пропущенных значений в переменной "Надпочечники"
+
+df1_process_median$`Поджелудочная железа`[is.na(df1_process_median$`Поджелудочная железа`)]<-median(df1_process_median$`Поджелудочная железа`,na.rm=TRUE) # Замена пропущенных значений в переменной "Поджелудочная железа"
+
+df1_process_median$Плацента[is.na(df1_process_median$Плацента)]<-median(df1_process_median$Плацента,na.rm=TRUE) # Замена пропущенных значений в переменной "Плацента"
+
+df1_process_median$`Окружность головы`[is.na(df1_process_median$`Окружность головы`)]<-median(df1_process_median$`Окружность головы`,na.rm=TRUE) # Замена пропущенных значений в переменной "Окружность головы"
+
+df1_process_median$`Окружность груди`[is.na(df1_process_median$`Окружность груди`)]<-median(df1_process_median$`Окружность груди`,na.rm=TRUE) # Замена пропущенных значений в переменной "Окружность груди"
+
+df1_process_median <- df1_process_median %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_median)
+```
+
+&nbsp;
+
+
+&nbsp;
+# 2.2 Описательная статистика нового датафрейма df1_process_median
+```{r}
+library (maditr)
+library (flextable)
+library (tidyr)
+
+statistics <- list(
+      `Количество субъектов` = ~length(.x),
+      `Количество (есть данные)` = ~sum(!is.na(.x)),
+      `Нет данных` = ~sum(is.na(.x)),
+      `Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `мин. - макс.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2))),
+      `Медиана` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", median(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Q1 - Q3` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2)))
+)
+
+
+
+df1_all_2 <- df1_process_median %>%
+  mutate(`мёртвый/живой` = "Всего")
+
+df1_work_2 <- rbind(df1_process_median, df1_all_2)
+
+stat_num_res <- df1_work_2 %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных") 
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 3. Сравнение нового датафрейма df1_process_median с исходным датасетом df1
+```{r}
+res.length <- t.test(df1$`Длина тела`, df1_process_median$`Длина тела`, alternative="two.sided")
+res.length$p.value
+res.length$conf.int
+```
+
+```{r}
+res.mass <- t.test(df1$`Масса тела`, df1_process_median$`Масса тела`, alternative="two.sided")
+res.mass$p.value
+res.mass$conf.int
+```
+
+```{r}
+res.brain <- t.test(df1$Мозг, df1_process_median$Мозг, alternative="two.sided")
+res.brain$p.value
+res.brain$conf.int
+```
+
+```{r}
+res.heart <- t.test(df1$Сердце, df1_process_median$Сердце, alternative="two.sided")
+res.heart$p.value
+res.heart$conf.int
+```
+
+
+```{r}
+res.lung <- t.test(df1$Лёгкие, df1_process_median$Лёгкие, alternative="two.sided")
+res.lung$p.value
+res.lung$conf.int
+```
+
+```{r}
+res.liver <- t.test(df1$Печень, df1_process_median$Печень, alternative="two.sided")
+res.liver$p.value
+res.liver$conf.int
+```
+
+```{r}
+res.splen <- t.test(df1$Селезёнка, df1_process_median$Селезёнка, alternative="two.sided")
+res.splen$p.value
+res.splen$conf.int
+```
+
+
+```{r}
+res.ren <- t.test(df1$Почки, df1_process_median$Почки, alternative="two.sided")
+res.ren$p.value
+res.ren$conf.int
+```
+
+```{r}
+res.thimus <- t.test(df1$Тимус, df1_process_median$Тимус, alternative="two.sided")
+res.thimus$p.value
+res.thimus$conf.int
+```
+
+```{r}
+res.supraren <- t.test(df1$Надпочечники, df1_process_median$Надпочечники, alternative="two.sided")
+res.supraren$p.value
+res.supraren$conf.int
+```
+
+```{r}
+res.pancreas <- t.test(df1$`Поджелудочная железа`, df1_process_median$`Поджелудочная железа`, alternative="two.sided")
+res.pancreas$p.value
+res.pancreas$conf.int
+```
+
+```{r}
+res.placenta <- t.test(df1$Плацента, df1_process_median$Плацента, alternative="two.sided")
+res.placenta$p.value
+res.placenta$conf.int
+```
+
+
+```{r}
+res.head <- t.test(df1$`Окружность головы`, df1_process_median$`Окружность головы`, alternative="two.sided")
+res.head$p.value
+res.head$conf.int
+```
+
+
+```{r}
+res.thorax <- t.test(df1$`Окружность груди`, df1_process_median$`Окружность груди`, alternative="two.sided")
+res.thorax$p.value
+res.thorax$conf.int
+```
+
+&nbsp;
+
+
+&nbsp;
+
+
+# 4.1 Замена пропущенных значений в количественных переменных на моду и создание нового датасета df1_process_mode
+```{r}
+df1_process_mode <- df1 # Создание нового датасета 
+
+mode <- function(x) {
+  ux <- na.omit(unique(x) )
+ tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
+} # Функция для вычисления моды
+
+
+df1_process_mode$`Длина тела`[is.na(df1_process_mode$`Длина тела`)]<-mode(df1_process_mode$`Длина тела`) # Замена пропущенных значений в переменной "Длина тела"
+
+df1_process_mode$`Масса тела`[is.na(df1_process_mode$`Масса тела`)]<-mode(df1_process_mode$`Масса тела`) # Замена пропущенных значений в переменной "Масса тела"
+
+df1_process_mode$Мозг[is.na(df1_process_mode$Мозг)]<-mode(df1_process_mode$Мозг) # Замена пропущенных значений в переменной "Мозг"
+
+df1_process_mode$Сердце[is.na(df1_process_mode$Сердце)]<-mode(df1_process_mode$Сердце) # Замена пропущенных значений в переменной "Сердце"
+
+df1_process_mode$Лёгкие[is.na(df1_process_mode$Лёгкие)]<-mode(df1_process_mode$Лёгкие) # Замена пропущенных значений в переменной "Лёгкие"
+
+df1_process_mode$Печень[is.na(df1_process_mode$Печень)]<-mode(df1_process_mode$Печень) # Замена пропущенных значений в переменной "Печень"
+
+df1_process_mode$Селезёнка[is.na(df1_process_mode$Селезёнка)]<-mode(df1_process_mode$Селезёнка) # Замена пропущенных значений в переменной "Селезёнка"
+
+df1_process_mode$Почки[is.na(df1_process_mode$Почки)]<-mode(df1_process_mode$Почки) # Замена пропущенных значений в переменной "Почки"
+
+df1_process_mode$Тимус[is.na(df1_process_mode$Тимус)]<-mode(df1_process_mode$Тимус) # Замена пропущенных значений в переменной "Тимус"
+
+df1_process_mode$Надпочечники[is.na(df1_process_mode$Надпочечники)]<-mode(df1_process_mode$Надпочечники) # Замена пропущенных значений в переменной "Надпочечники"
+
+df1_process_mode$`Поджелудочная железа`[is.na(df1_process_mode$`Поджелудочная железа`)]<-mode(df1_process_mode$`Поджелудочная железа`) # Замена пропущенных значений в переменной "Поджелудочная железа"
+
+df1_process_mode$Плацента[is.na(df1_process_mode$Плацента)]<-mode(df1_process_mode$Плацента) # Замена пропущенных значений в переменной "Плацента"
+
+df1_process_mode$`Окружность головы`[is.na(df1_process_mode$`Окружность головы`)]<-mode(df1_process_mode$`Окружность головы`) # Замена пропущенных значений в переменной "Окружность головы"
+
+df1_process_mode$`Окружность груди`[is.na(df1_process_mode$`Окружность груди`)]<-mode(df1_process_mode$`Окружность груди`) # Замена пропущенных значений в переменной "Окружность груди"
+
+df1_process_mode <- df1_process_mode %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_mode)
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 4.2 Описательная статистика нового датафрейма df1_process_mode
+```{r}
+library (maditr)
+library (flextable)
+library (tidyr)
+
+statistics <- list(
+      `Количество субъектов` = ~length(.x),
+      `Количество (есть данные)` = ~sum(!is.na(.x)),
+      `Нет данных` = ~sum(is.na(.x)),
+      `Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `мин. - макс.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2))),
+      `Медиана` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", median(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Q1 - Q3` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2)))
+)
+
+
+
+df1_all_3 <- df1_process_mode %>%
+  mutate(`мёртвый/живой` = "Всего")
+
+df1_work_3 <- rbind(df1_process_mode, df1_all_3)
+
+stat_num_res <- df1_work_3 %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных") 
+```
+
+&nbsp;
+
+
+&nbsp;
+
+# 4.3 Сравнение нового датафрейма df1_process_mode с исходным датасетом df1
+```{r}
+res.length <- t.test(df1$`Длина тела`, df1_process_mode$`Длина тела`, alternative="two.sided")
+res.length$p.value
+res.length$conf.int
+```
+
+```{r}
+res.mass <- t.test(df1$`Масса тела`, df1_process_mode$`Масса тела`, alternative="two.sided")
+res.mass$p.value
+res.mass$conf.int
+```
+
+```{r}
+res.brain <- t.test(df1$Мозг, df1_process_mode$Мозг, alternative="two.sided")
+res.brain$p.value
+res.brain$conf.int
+```
+
+```{r}
+res.heart <- t.test(df1$Сердце, df1_process_mode$Сердце, alternative="two.sided")
+res.heart$p.value
+res.heart$conf.int
+```
+
+```{r}
+res.lung <- t.test(df1$Лёгкие, df1_process_mode$Лёгкие, alternative="two.sided")
+res.lung$p.value
+res.lung$conf.int
+```
+```{r}
+res.liver <- t.test(df1$Печень, df1_process_mode$Печень, alternative="two.sided")
+res.liver$p.value
+res.liver$conf.int
+```
+```{r}
+res.splen <- t.test(df1$Селезёнка, df1_process_mode$Селезёнка, alternative="two.sided")
+res.splen$p.value
+res.splen$conf.int
+```
+```{r}
+res.ren <- t.test(df1$Почки, df1_process_mode$Почки, alternative="two.sided")
+res.ren$p.value
+res.ren$conf.int
+```
+```{r}
+res.thimus <- t.test(df1$Тимус, df1_process_mode$Тимус, alternative="two.sided")
+res.thimus$p.value
+res.thimus$conf.int
+```
+```{r}
+res.supraren <- t.test(df1$Надпочечники, df1_process_mode$Надпочечники, alternative="two.sided")
+res.supraren$p.value
+res.supraren$conf.int
+```
+```{r}
+res.pancreas <- t.test(df1$`Поджелудочная железа`, df1_process_mode$`Поджелудочная железа`, alternative="two.sided")
+res.pancreas$p.value
+res.pancreas$conf.int
+```
+```{r}
+res.placenta <- t.test(df1$Плацента, df1_process_mode$Плацента, alternative="two.sided")
+res.placenta$p.value
+res.placenta$conf.int
+```
+```{r}
+res.head <- t.test(df1$`Окружность головы`, df1_process_mode$`Окружность головы`, alternative="two.sided")
+res.head$p.value
+res.head$conf.int
+```
+```{r}
+res.thorax <- t.test(df1$`Окружность груди`, df1_process_mode$`Окружность груди`, alternative="two.sided")
+res.thorax$p.value
+res.thorax$conf.int
+```
+
+
+# 5. Графическое представление сравнительного анализа новых датафреймов с исходным df1.
+```{r}
+library(ggpubr)
+library (rstatix)
+
+lst <- list(df1, df1_process_mean, df1_process_median, df1_process_mode)
+lst <- lapply(1:length(lst), function(x){
+  lst[[x]] <- lst[[x]] %>%
+    mutate(name = paste("DF",x))
+})
+
+whole <- do.call(rbind, lst)
+whole$name <- as.factor(whole$name)
+  
+
+stat.test <- whole %>% t_test(Печень ~ name, ref.group = "DF 1")
+stat.test <- stat.test %>% add_xy_position (x = "name")
+
+
+ggboxplot (whole, x = "name", y = "Печень", fill = "name", palette = c("#CCFF99", "#FF99CC", "#CCCCFF", "#FFCC66"), alpha=0.5, size=0.4)+
+    geom_bracket(
+    aes(xmin = group1, xmax = group2, label = signif(p.adj, 2)),
+    data = stat.test, y.position = c(340, 370, 400)
+   )+
+  theme_light()+
+  xlab("Датафрейм")+
+  ylab("Печень, г")+
+  theme(axis.title.y = element_text (size=12, margin = margin(l = 10, r = 10)))+
+  theme(axis.title.x = element_text (size=12, margin = margin(t = 10, b = 10)))+
+  theme(axis.text.x = element_text(size=10, ))+
+  theme(legend.position = "none")+
+  scale_x_discrete(labels=c('Исходный', 'Замена NA на
+  среднее', 'Замена NA на 
+  медиану','Замена NA на 
+  моду'))+
+  scale_y_continuous (breaks = c (0,50,100,150,200,250,300,350,400), limits = c(0, 400))
+```
