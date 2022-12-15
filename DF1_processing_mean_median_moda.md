@@ -200,7 +200,7 @@ library (maditr)
     ## Warning: пакет 'maditr' был собран под R версии 4.2.2
 
     ## 
-    ## To aggregate all non-grouping columns: take_all(mtcars, mean, by = am)
+    ## To select columns from data: columns(mtcars, mpg, vs:carb)
 
     ## 
     ## Присоединяю пакет: 'maditr'
@@ -1266,7 +1266,7 @@ stat.test <- stat.test %>% add_xy_position (x = "name")
 ggviolin (whole, x = "name", y = "Печень", fill = "name", palette = c("#CCFF99", "#FF99CC", "#CCCCFF", "#FFCC66"), alpha=0.5, size=0.1,  add = "boxplot", add.params = list(fill = "white", size=0.2, width = 0.1, alpha = 0.5))+
     geom_bracket(
     aes(xmin = group1, xmax = group2, label = signif(p.adj, 2)),
-    data = stat.test, y.position = c(800, 900, 1000)
+    data = stat.test, y.position = c(340, 370, 400)
    )+
   theme_light()+
   xlab("Датафрейм")+
@@ -1285,8 +1285,6 @@ ggviolin (whole, x = "name", y = "Печень", fill = "name", palette = c("#CC
     ## Warning: Removed 357 rows containing non-finite values (`stat_ydensity()`).
 
     ## Warning: Removed 357 rows containing non-finite values (`stat_boxplot()`).
-
-    ## Warning: Removed 3 rows containing non-finite values (`stat_bracket()`).
 
     ## Warning: Removed 67 rows containing missing values (`geom_violin()`).
 
