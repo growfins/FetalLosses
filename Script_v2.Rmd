@@ -5,7 +5,6 @@ date: "2022-12-07"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library (dplyr)
@@ -14,6 +13,12 @@ library (stringr)
 library (readr)
 library (readxl)
 
+library(data.table)
+library(flextable)
+library(mice)
+library(ggmice)
+library(ggplot2)
+library(Rmisc)
 ```
 
 # 0. Загрузка и чтение данных, подготовка возраста
@@ -47,8 +52,8 @@ data$`возраст` <- ifelse(is.na(data$`возраст`) ==  T, data$`мёр
 data$`мёртвый/живой` <- ifelse(data$`возраст` == 0, 'мертв', 'жив')
 ```
 
-
 # 1. Проверка на "вшивость" (чанк для себя, для финального кода НЕ НУЖЕН)
+
 ```{r}
 df <- data
 df <- as_tibble(df) # Загрузка данных и преобразование в tibble
@@ -62,12 +67,12 @@ lapply(df[ , sapply(df, is.factor)], function(v) {
 })# Посмотреть на все уровни факторных переменных и проверить "косяки"
 ```
 
-&nbsp;
+ 
 
-
-&nbsp;
+ 
 
 # 2. Чистка и преобразование переменных - пол, гестация, длина тела, масса тела, мозг, сердце, лёгкие, печень, мацерация, ВПР - к нужному типу (ГЛАВНЫЙ ЧАНК)
+
 ```{r}
 # Загрузка данных и преобразование в tibble:
 
@@ -136,7 +141,6 @@ df <- df %>%
 
 # 3. Часть кода для очистки переменных - селезёнка, почки, тимус, н/п, пжж, плацента - к нужному типу (ГЛАВНЫЙ ЧАНК)
 
-
 ```{r}
 
 df <- df %>%
@@ -144,14 +148,12 @@ df <- df %>%
  
 ```
 
-
 ```{r}
 lapply(df[ , sapply(df, is.factor)], function(v) {
   data.frame(Levels=levels(unique(sort(v))),
              Values=as.numeric(unique(sort(v)))) })
 
 ```
-
 
 ```{r}
 df <- df %>% 
@@ -164,8 +166,6 @@ df <- df %>%
   mutate(`плацента` = recode(`плацента`, '150 г' = '150', '310 г' = '310','380 г' = '380'))
 
 ```
-
-
 
 ```{r}
 
@@ -198,7 +198,6 @@ df <- df %>%
   mutate(across(c(`селезёнка`,`почки`,`тимус`,`н/п`,`пжж`,`плацента`), function(x) round(x,2)))
 
 ```
-
 
 # 4. Часть кода для очистки переменных - возраст, многоплодная, СЗРП, окружность головы, окружность груди к нужному типу (ГЛАВНЫЙ ЧАНК)
 
@@ -294,25 +293,29 @@ df <- df %>%
   mutate(Time2_days = Var2 * Time2) %>%
   mutate(Time3_days = Var3 * Time3) %>%
   mutate(Time4_days = Var4 * Time4) %>%
-  rowwise() %>% 
-  mutate(Age = sum(Time1_days,Time2_days,Time3_days,Time4_days, na.rm=TRUE))
+  rowwise()
+```
 
+```{r}
+df <- df %>%
+  mutate(Age = rowSums(df[,44:47], na.rm = TRUE))
+```
 
-
+```{r}
 #Версия датасета с обработанным возрастом (округление до целых в большую сторону - Age), переменными многоплодная - окружность груди
 df <- df %>%
   mutate(`Age` = ceiling(`Age`)) %>%
   mutate(across(c(`многоплодная`,`СЗРП`), function(x) as.factor(x))) %>%
   mutate(across(c(`окружность головы`, `окружность груди`),  function(x) gsub(",", ".", x))) %>%
   mutate(across(c(`окружность головы`, `окружность груди`), function(y) as.numeric(y))) %>%
-  select(`№ протокола`, `пол`, `мёртвый/живой`, `возраст`, `гестация`, `длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, 
+  select(`№ протокола`, `пол`, `мёртвый/живой`, `гестация`, `длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, 
          `печень`, `селезёнка`, `почки`, `тимус`, `н/п`, `пжж`, `плацента`, `мацерация`, `ВПР`, `многоплодная`, 
          `СЗРП`, `окружность головы`, `окружность груди`, `год`, `Age`)
 
 ```
 
+# Фильтрация и создание нового датасета референсных значений df1, переименование
 
-# Фильтрация и создание нового датасета референсных значений df1, переименование 
 ```{r}
 df1 <- df %>%
   filter(!is.na(`№ протокола`) & 
@@ -323,22 +326,20 @@ df1 <- df %>%
          !grepl(paste(c("ЦНС","КМС","ВПР","ДС","МПС","Даун","Арнольда-Киари","ГС","гс", "ОГС","ЖКТ", "бетическая фетопатия", "Эдвардс", "по медпоказаниям","ССС", "лимфангиоэктазия","да"),collapse = '|'), ВПР) &
          многоплодная %in% c('нет', NA) &
          !grepl('СЗРП|ЗВУР', СЗРП)) %>%
-  mutate(`мёртвый/живой` = ifelse(`мёртвый/живой` == "жив", "Живой", "Мёртвый"))  %>%
-  rename(`Пол` = `пол`,`Гестация` = `гестация`, `Длина тела` = `длина тела`, `Масса тела` = `масса тела`, `Мозг` = `мозг`, 
-         `Сердце` = `сердце`, `Лёгкие` = `лёгкие`, `Печень` = `печень`, `Селезёнка` = `селезёнка`, `Почки` = `почки`,
-         `Тимус`=`тимус`, `Надпочечники` = `н/п`, `Поджелудочная железа` = `пжж`, `Плацента` = `плацента`, 
-         `Мацерация` = `мацерация`, `Многоплодная` = `многоплодная`,`Окружность головы` = `окружность головы`, 
-         `Окружность груди` = `окружность груди`, `Год` = `год`, `Возраст в днях` = `Age`)
-
+  mutate(`мёртвый/живой` = ifelse(`мёртвый/живой` == "жив", "Живой", "Мёртвый")) %>%
+  rename_with(function(x) x %>% str_to_sentence()) %>%
+  dplyr::rename(`Надпочечники` = `Н/п`, `Поджелудочная железа` = `Пжж`, `Возраст в днях` = `Age`, `СЗРП` = `Сзрп`, `ВПР` = `Впр`)
+  
 # дофильтруем датасет по переменной ВПР
 df1 <- df1 %>% filter(is.na(ВПР) |
   grepl(paste(c("инфекция", "аспирация", "пневмония", 'нет'), collapse = '|'), ignore.case = TRUE, ВПР))
+
 df1$ВПР <- replace(df1$ВПР, df1$ВПР %in% c("инфекция неиммуная водянка", "гипоплазия лёгких инфекция"), "инфекция")
 
 summary(df1)
 ```
 
-write_csv(x = df1, file = "df1_csv.csv") - # сохранение дата-фрейма. 
+write_csv(x = df1, file = "df1_csv.csv") - \# сохранение дата-фрейма.
 
 # Описательная статистика для работы с пропусками
 
@@ -357,18 +358,18 @@ statistics <- list(
 
 
 df1_all <- df1 %>%
-  mutate(`мёртвый/живой` = "Всего")
+  mutate(`Мёртвый/живой` = "Всего")
 
 df1_work <- rbind(df1, df1_all)
 
 stat_num_res <- df1_work %>%
-  select(`мёртвый/живой`, where(is.numeric)) %>%
-  group_by(`мёртвый/живой`) %>%
-  summarise(across(where(is.numeric), statistics)) %>%
-  mutate(across(everything(), as.character)) %>% 
-  pivot_longer(!`мёртвый/живой`) %>%
+  select(`Мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`Мёртвый/живой`) %>%
+  dplyr::summarise(across(where(is.numeric), statistics)) %>%
+  dplyr::mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`Мёртвый/живой`) %>%
   separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
-  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+  dcast(`Переменная` + `Статистика` ~ `Мёртвый/живой`, value.var = "value") 
 
 
 stat_num_res %>% 
@@ -379,3 +380,249 @@ stat_num_res %>%
   width(width = 1.2)
 ```
 
+# Заполнение пропусков методом MICE
+
+## MICE - Multiple Imputation by Chained Equations (Множественная импутация в многоуровневой регрессии)
+
+### Подготовка
+
+Ознакомимся с ситуацией с пропусками по всему датасету в целом.
+
+Посмотрим на количество пропущенных значений в каждом столбце, выделяя экстремально высокие (\>80%) и экстремально низкие (\<5%)
+
+```{r}
+table <- colSums(is.na(df1)) %>% 
+  as.data.frame() %>% 
+  mutate(`Процент` = `.`*100/nrow(df1)) %>% round(2) %>% 
+  rownames_to_column("Признак") %>% setNames(., c('Признак', 'Кол-во пропусков', 'Процент')) %>%
+  flextable()%>%
+  theme_box() %>%
+  set_table_properties(layout = "autofit") %>%
+  color(i = ~ `Процент` <= 5, color = 'forestgreen') %>%
+  color(i = ~ `Процент` > 80, color = 'red') 
+
+table
+```
+
+Среди признаков есть как и с очень небольшим количеством пропусков, так и признаки с огромным количеством пропущенных значений.
+
+**Об особенностях пропусков в столбцах Многоплодная, СЗРП, Мацерация:** кроме пропуска, столбцы Многоплодная и Мацерация сродержат лишь одно значение. Пропуски в этом случае замостим этим значением. Столбец СЗРП по итогам фильтрации не содержит ни одного значения. Все три столбца для дальнейшего анализа малоинформативны, и могут быть исключены из него.
+
+```{r}
+df1$Мацерация = "нет"
+df1$Многоплодная = "нет"
+df1$СЗРП = NULL
+```
+
+### Выполнение
+
+```{r}
+# подготовка к MICE
+
+# запомним датасет с пропусками в переменной data_NA (нужно для дальнейшего сравнения)
+df1_NA <- df1
+
+# сохраняем номера и названия столбцов во вспомогательной таблице:
+names_coded <- as.data.frame(1:ncol(df1)) %>% setNames(., 'key')
+names_coded[,1] <- lapply(names_coded, function(x) paste("col", x, sep="_"))
+names_coded$column <- colnames(df1)
+
+# переименуем колонки датасета
+df1 <- setNames(df1, names_coded$key) 
+
+# инициируем импутацию
+init = mice(df1, maxit=0) 
+method = init$method
+pred_matrix = init$predictorMatrix
+
+# выключаем неинформативные переменные из предикторов. К предикторам не должны относиться: 
+# № протокола, 'Год', "Мацерация" и "Многоплодная" 
+no_predictors <- grep(paste(c('№ протокола', 'Год', 'Многоплодная','Мацерация'), collapse = '|'), names_coded$column)
+pred_matrix[, c(names_coded$key[no_predictors])] = 0
+
+#начинаем импутацию ~ 15 сек
+set.seed(42)
+imputed = mice(df1, 
+               method = method, 
+               predictorMatrix = pred_matrix, 
+               m = 5)
+
+# сохраняем готовый датасет, возвращаем имена колонкам
+df1 <- complete(imputed)
+df1 <- setNames(df1, names_coded$column)
+
+# проверяем результат
+table <- colSums(is.na(df1)) %>% 
+  as.data.frame() %>% 
+  rownames_to_column("Признак") %>% setNames(., c('Признак', 'Кол-во пропусков')) %>%
+  flextable()%>%
+  theme_box() %>%
+  set_table_properties(layout = "autofit")
+
+table 
+```
+
+### Анализ результатов
+
+Проверка качества импутации будет оценена визуально путем сравнения графиков плотности распределения наблюдаемых значений и импутированных значений, а также путём составления сводной таблицы с основными статистиками
+
+Анализировать результаты будем раздельно по категориальным и количественным признакам
+
+#### Количественые признаки
+
+Сводная таблица (только для столбцов, в которых была произведена импутация)
+
+```{r}
+# основные статистики
+statistics <- list(
+      `_Количество субъектов` = ~length(.x) %>% as.character(),
+      `_Количество (есть данные)` = ~ sum(!is.na(.x)) %>% as.character(),
+      `_Нет данных` = ~ sum(is.na(.x)) %>% as.character(),
+      `_Ср. знач.` = ~ mean(.x, na.rm = TRUE) %>% round(2) %>% as.character(),
+      `_Станд. отклон.` = ~ sd(.x, na.rm = TRUE) %>% round(2) %>% as.character(),
+      `_95% ДИ для среднего` = ~ paste0(CI(na.omit(.x), ci = 0.95)[3] %>% round(2), '-', CI(na.omit(.x), ci = 0.95)[1] %>% round(2)) %>% as.character(),
+      `_мин. - макс.` = ~ paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2)) %>% as.character(),
+      `_Медиана` = ~ median(.x, na.rm = TRUE) %>% round(2) %>% as.character(),
+      `_Q1 - Q3` = ~ paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2) %>% as.character())
+      )
+```
+
+```{r}
+df1_NA_work <- df1_NA %>% 
+  select(ВПР, where(is.numeric)) %>% as.data.frame()
+
+df1_work <- df1 %>% 
+  select(ВПР, where(is.numeric)) %>% as.data.frame()
+
+df1_NA_work$признаки <- "До заполнения"
+df1_work$признаки <- "После заполнения"
+df_comp <- rbind(df1_NA_work, df1_work)
+
+# собираем тольео импутированные столбцы
+stat_num_res <- df_comp %>% 
+  subset(select = -c(`Гестация`, `Возраст в днях`, `Год`, `ВПР`)) %>%
+  select(`признаки`, where(is.numeric)) %>% 
+  group_by(`признаки`) %>%
+  dplyr::summarise(across(where(is.numeric), statistics)) %>%
+  t() %>% as.data.frame() %>% rownames_to_column("value") %>%
+  `colnames<-`(.[1, ]) %>% .[-1, ] %>%
+  separate(`признаки`, into = c("Переменная","Статистика"), sep = '_') %>% 
+  flextable() %>%
+  theme_box() %>%  
+  merge_v('Переменная') %>%
+  set_table_properties(layout = "autofit") %>%
+  flextable::align(j = c(1, 3:4), align = "center", part = 'all') 
+
+stat_num_res
+```
+
+Графики плотности распределения для каждой из переменных
+
+```{r}
+ggmice(imputed, aes(x = col_5, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Длина тела"') + 
+  labs(x = 'Длина тела', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_6, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Масса тела"') + 
+  labs(x = 'Масса тела', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_7, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Мозг"') + 
+  labs(x = 'Мозг', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_8, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Сердце"') + 
+  labs(x = 'Сердце', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_9, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Лёгкие"') + 
+  labs(x = 'Лёгкие', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_10, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Печень"') + 
+  labs(x = 'Печень', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_11, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Селезёнка"') + 
+  labs(x = 'Селезёнка', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_12, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Почки"') + 
+  labs(x = 'Почки', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_13, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Тимус"') + 
+  labs(x = 'Тимус', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_14, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Надпочечники"') + 
+  labs(x = 'Надпочечники', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_15, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Поджелудочная железа"') + 
+  labs(x = 'Поджелудочная железа', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_16, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Плацента"') + 
+  labs(x = 'Плацента', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_20, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Окружность головы"') + 
+  labs(x = 'Окружность головы', y = 'Плотность')
+
+ggmice(imputed, aes(x = col_21, group = .imp)) +
+  geom_density() +
+  ggtitle('График плотности распределения различных этапов импутации \n для переменной "Окружность груди"') + 
+  labs(x = 'Окружность груди', y = 'Плотность')
+
+```
+
+#### Категориальные признаки
+
+Сводная таблица
+
+```{r}
+stat_cat_res <- df_comp %>%
+  select(`признаки`, `ВПР`) %>% 
+  group_by(`признаки`) %>%
+  count(`признаки` ~ `ВПР`) %>%
+  mutate(`% по выборке` = round(freq*100/(nrow(df_comp)/2), 2)) %>%
+  tidyr::pivot_wider(names_from = c(`признаки`),
+                     values_from = c(`freq`, `% по выборке`)) %>%
+  setNames(c('ВПР', 'Кол-во до заполнения', 'Кол-во после заполнения',
+           '% по выборке до заполнения', '% по выборке после заполнения')) %>%
+  flextable() %>%
+  theme_box() %>%
+  set_table_properties(layout = "autofit") %>%
+  flextable::align(j = c(2:5), align = "center", part = 'all') 
+
+stat_cat_res <- compose(stat_cat_res, i = 5, j = 1, as_paragraph(as_chunk('пропущено')))
+stat_cat_res <- compose(stat_cat_res, i = 5, j = 3, as_paragraph(as_chunk('-')))
+stat_cat_res <- compose(stat_cat_res, i = 5, j = 5, as_paragraph(as_chunk('-')))
+
+stat_cat_res
+```
+
+```{r}
+barplot(prop.table(table(as.factor(as.character(df1_NA_work$ВПР)))),
+        col = c("#eb8060", "#b9e38d", "#a1e9f0", "#d9b1f0"),
+        main = "Распределение различных значений столбца ВПР до импутации")
+
+barplot(prop.table(table(as.factor(as.character(df1_work$ВПР)))),
+        col = c("#eb8060", "#b9e38d", "#a1e9f0", "#d9b1f0"),
+        main = "Распределение различных значений столбца ВПР после импутации")
+```
