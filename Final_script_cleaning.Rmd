@@ -1,0 +1,685 @@
+---
+title: "Dataset cleaning"
+author: "ПП1"
+date: "2022-12-07"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (tidyverse)
+library (readxl)
+library (readr)
+library (tibble)
+library (tidyr)
+library (flextable)
+library (dplyr)
+library (stringr)
+library(flextable)
+library(reshape2)
+library(caret)
+#install.packages(future.apply)
+#library(future.apply)
+#install.packages(RANN)
+library(RANN)
+
+library(ggplot2)
+
+
+
+#install.packages(c("zoo","xts","quantmod"))
+#install.packages( "DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+#library(DMwR)
+```
+
+
+
+
+# 2. Чистка и преобразование переменных - гестация, длина тела, масса тела, мозг, сердце, лёгкие, печень, мацерация, ВПР - к нужному типу (ГЛАВНЫЙ ЧАНК)
+```{r, results='hide'}
+# Загрузка данных и преобразование в tibble:
+
+df <- read_csv("aged_data_full2.csv")
+df <- as_tibble(df) 
+
+#Замена запятых на точки в количественных переменных:
+
+df <- df %>% 
+  mutate (across(c(`гестация`, `длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, `печень`, `мацерация`,`ВПР`), function(x) as.character(x))) %>%
+  mutate (across (c(`гестация`, `длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, `печень`), function(y) gsub(",", ".", y)))
+
+# Работа с категориальными переменными:
+
+df <- df %>%
+  mutate(`пол` = recode(`пол`, 'f'='ж', 'm'='м'))
+df$пол <- replace(df$пол, df$пол %in% c("?","м и ж","НЕТ ПЕРВОГО ЛИСТА", "НЕТ ПРОТОКОЛА", "нет возможности определить", "не указано", "н/п"), NA)
+
+df <- df %>%
+  mutate(`мацерация` = recode(`мацерация`, 'мумификация'='да'))
+df$ВПР <- replace(df$ВПР,df$ВПР == "?",NA)
+
+
+#Предобработка явных косяков в количественных переменных:
+
+df <- df %>%
+  mutate(`масса тела` = recode(`масса тела`, '39-70' = '3970', '10.4' = '1040', '17.5' = '1750', '31.8' = '3180'))%>%
+  mutate(`мозг` = recode(`мозг`, '660+112' = '772', '50+60' = '110')) 
+
+
+# Окончательная чистка и приведение к нужному типу:
+
+df$гестация <- parse_number(df$гестация, na = c("?", "???", "?7", "@", "5 лет")) #Гестация
+
+
+df$`длина тела` <- parse_number(df$`длина тела`, na = c("?", "?1","?2","?3","?5","?6", "?7","?9","@","5 лет","0")) #Длина тела
+
+
+df$`масса тела` <- str_replace_all(df$`масса тела`, regex("\\s*"), "")
+df$`масса тела` <- parse_number(df$`масса тела`, na = c("?","??20","?30","@","3 мес","5 лет","9 лет")) #Масса тела
+
+
+df$мозг <- str_replace_all(df$мозг, regex("\\s*"), "")
+df$мозг <- parse_number(df$мозг, na = c("-","!","!!!","?","???", "@", "0")) #Мозг
+
+
+df$сердце <- parse_number(df$сердце, na = c("?", "@"))
+df$сердце <-replace(df$сердце,df$сердце > 44000,NA) #Сердце
+
+
+df$лёгкие <- sapply(regmatches(df$лёгкие, gregexpr("[[:digit:]]+\\.*[[:digit:]]*", df$лёгкие)), function(x) sum(as.numeric(x)))
+df$лёгкие <-replace(df$лёгкие,df$лёгкие > 44000,NA)
+df$лёгкие <-replace(df$лёгкие,df$лёгкие == 0,NA) #Лёгкие
+
+
+df$печень <- str_replace_all(df$печень, regex("\\s*"), "")  
+df$печень <- parse_number(df$печень, na = c("?", "@", "0"))
+df$печень <-replace(df$печень,df$печень > 44000,NA) #Печень
+
+
+df <- df %>%
+  mutate(across(c(`мацерация`,`ВПР`), function(x) as.factor(x)))%>%
+  mutate(across(c(`длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, `печень`), function(x) round(x,2))) # Окончательный вид
+```
+
+# 3. Часть кода для очистки переменных - селезёнка, почки, тимус, н/п, пжж, плацента - к нужному типу (ГЛАВНЫЙ ЧАНК)
+
+
+```{r}
+
+df <- df %>%
+  mutate (across(c(`селезёнка`,`почки`,`тимус`,`н/п`,`пжж`,`плацента`), function(x) as.factor(x))) 
+ 
+```
+
+
+```{r, results='hide'}
+lapply(df[ , sapply(df, is.factor)], function(v) {
+  data.frame(Levels=levels(unique(sort(v))),
+             Values=as.numeric(unique(sort(v)))) })
+
+```
+
+
+```{r, results='hide'}
+df <- df %>% 
+  mutate (across(c(`селезёнка`,`почки`,`тимус`,`н/п`,`пжж`,`плацента`), function(x) as.character(x))) %>%
+  mutate (across (c(`селезёнка`,`почки`,`тимус`,`н/п`,`пжж`,`плацента`), function(y) gsub(",", ".", y)))
+
+df <- df %>%
+  mutate(`почки` = recode(`почки`, '11,64 гр' = '11.64', '12,07 гр' = '12.07','120 (обе)' = '120'))%>%
+  mutate(`тимус` = recode(`тимус`, '0.9-1' = '0.9'))%>%
+  mutate(`плацента` = recode(`плацента`, '150 г' = '150', '310 г' = '310','380 г' = '380'))
+
+```
+
+
+
+```{r, results='hide'}
+
+df$селезёнка <- parse_number(df$селезёнка, na = c("@","5,1 и 6,8", "abs", "N", "аут", "аутолиз", "Аутолиз", "ен", "и","л","ли","нет","ный","о","п-8,1 л-5","т","то","тол","фра"))
+df$селезёнка <-replace(df$селезёнка,df$селезёнка > 40000,NA)
+
+
+df$почки <- sapply(regmatches(df$почки, gregexpr("[[:digit:]]+\\.*[[:digit:]]*", df$почки)), function(x) sum(as.numeric(x)))
+df$почки <-replace(df$почки,df$почки == 0,NA)
+df$почки <-replace(df$почки,df$почки > 40000,NA)
+
+df$тимус <- parse_number(df$тимус, na = c("?", "0","@","16,?","41,9/9","7.0000000000000007E-2","abs","аут","аутолиз", "Аутолиз","з","и","л","не доставлено","ра","тац","у","ц"))
+df$тимус <-replace(df$тимус,df$тимус > 40000,NA)
+
+df$`н/п` <- sapply(regmatches(df$`н/п`, gregexpr ("[[:digit:]]+\\.*[[:digit:]]*", df$`н/п`)), function(x) sum(as.numeric(x)))
+df$`н/п` <- replace(df$`н/п`, df$`н/п` == 0,NA)
+df$`н/п` <- replace(df$`н/п`, df$`н/п` > 40000,NA)
+
+
+df$пжж <- parse_number(df$пжж, na = c("?", "0,?","@","аутолиз", "Аутолиз","з","из","нет","олиз","толиз","я"))
+df$пжж <-replace(df$пжж,df$пжж > 40000,NA)
+
+df$плацента <- parse_number(df$плацента, na = c("?", "@","0.00", "1 250,0","120 и 130","120;220","138;130","138;196","140 и 230","160 и 372","1пл1672пл169","1пл208.2пл170","200и1200","210;280","226; 177","235;350","240 и 280","250\\115","260 и 175","325\\300","330\\244","350;150","400и350","440 и 270","70 и 355","Асфиксия новорожденного. Порст гипоксический отек - набухание головного мозга. Множественные ателектазы в легких. Дистрофия миокарда. печени. почек. Понкровие внутренних органов. Недоношенность.","б/о","без патологий","не доставлена","не прислана","нет"))
+
+```
+
+```{r}
+
+df <- df %>%
+  mutate(across(c(`селезёнка`,`почки`,`тимус`,`н/п`,`пжж`,`плацента`), function(x) round(x,2)))
+
+```
+
+
+# 4. Часть кода для очистки переменных - возраст, многоплодная, СЗРП, окружность головы, окружность груди к нужному типу (ГЛАВНЫЙ ЧАНК)
+
+```{r, results='hide'}
+
+
+#Создадим переменную, состоящую из номера протокола и года
+df <- df %>%
+  mutate(`id_year` = paste(`№ протокола`, "_", год))
+
+
+
+#В таблице приведены уникальные id субъектов (номер протокола + год) и исправленный возраст (добавлены пробелы между цифрами и ед. измерения)
+table_change <- read_excel("data.xlsx", sheet = "wrong")
+
+
+#Объединяем исходный набор данных с новой исправленной переменной
+df <- left_join(df, table_change, by="id_year")
+
+#Перезаписываем корректные значений
+df <- df %>%
+  mutate(`age_fin` = if_else(!is.na(new),`new`, `возраст`))
+
+
+#Разделим возраст на 8 столбцов
+df <- df %>%
+  mutate(age_copy = age_fin) %>%
+  separate(age_fin, into  = c("Var1","Var1_ed" ,"Var2","Var2_ed", "Var3","Var3_ed", "Var4","Var4_ed"), sep = " ") %>%
+  mutate(`Var1` = as.numeric(`Var1`), `Var2` = as.numeric(`Var2`), `Var3` = as.numeric(`Var3`), `Var4` = as.numeric(`Var4`))
+
+
+#Создадим сводные таблицы по единицам измерений возраста, чтобы далее привести их к единому формату
+var1_tabf <- as.data.frame(table(df$Var1_ed))
+var2_tabf <- as.data.frame(table(df$Var2_ed))
+var3_tabf <- as.data.frame(table(df$Var3_ed))
+var4_tabf <- as.data.frame(table(df$Var4_ed))
+
+
+
+#На основе сводных таблиц перекодируем единицы измерения
+df <- df %>%
+  mutate(`Var1_ed_fin` = ifelse(Var1_ed %in% c("гибель", "ПРОТОКОЛА", "сердцебиен", "сердцебиение", "сердцебиением", "указан"), NA, 
+                            ifelse(Var1_ed %in% c("г", "год", "года"), "год", 
+                                ifelse(Var1_ed %in% c("д",	"д.",	"дней",	"дней,",	"дня",	"жд"), "день", 
+                                   ifelse(Var1_ed %in% c("л",	"лет"), "лет",
+                                      ifelse(Var1_ed %in% c("м",	"мес",	"мес.",	"месяц",	"месяца",	"месяцев"), "месяц",
+                                          ifelse(Var1_ed %in% c("мин",	"минут"), "минута",
+                                             ifelse(Var1_ed %in% c("нед"), "неделя",
+                                                ifelse(Var1_ed %in% c("сек"), "секунда",
+                                                    ifelse(Var1_ed %in% c("с.",	"сут.",	"сутки",	"суток",	"сутоок"), "сутки",  
+                                                        ifelse(Var1_ed %in% c("ч",	"ч.",	"час",	"час.",	"часа",	"часов"), "час", "none")))))))))) %>% as.factor()) %>% 
+  
+  mutate(`Var2_ed_fin` = ifelse(Var2_ed %in% c("д",	"д.",	"дн",	"дней",	"дня", "день"), "день", 
+                                ifelse(Var2_ed %in% c("мес",	"месяца",	"месяцев"), "месяц",
+                                       ifelse(Var2_ed %in% c("мин","мин.","минут", "минуты", "м.", "м", "минута"), "минута",
+                                              ifelse(Var2_ed %in% c("сек"), "секунда",
+                                                     ifelse(Var2_ed %in% c("сут","суток"), "сутки",
+                                                            ifelse(Var2_ed %in% c("ч",	"ч.",	"час",	"час.",	"часа",	"часаов",	"часов",	"часов.",	"ччасов"), "час", "none")))))) %>% as.factor()) %>%
+  
+  mutate(`Var3_ed_fin` = ifelse(Var3_ed %in% c("д"), "день", 
+                                ifelse(Var3_ed %in% c("м",	"м.",	"мин",	"мин.",	"минут",	"минут.",	"минута",	"минуту",	"минуты"), "минута",
+                                       ifelse(Var3_ed %in% c("ч",	"ч."), "час", "none")))  %>% as.factor()) %>%
+  mutate(`Var4_ed_fin` = ifelse(Var4_ed %in% c("мин"), "минута", "none")  %>% as.factor()) 
+
+
+
+#Для каждой единицы измерения создадим множитель для перевода в дни
+df <- df %>%
+  mutate(`Time1` = ifelse(Var1_ed_fin %in% "none", 1,
+                          ifelse(Var1_ed_fin %in% c("год",	"лет"), 365,
+                                 ifelse(Var1_ed_fin %in% "месяц", 30,
+                                        ifelse(Var1_ed_fin %in% "неделя", 7,
+                                               ifelse(Var1_ed_fin %in% c("день",	"сутки"), 1, 
+                                                      ifelse(Var1_ed_fin %in% "час", 1/24,
+                                                             ifelse(Var1_ed_fin %in% "минута", 1/1440, 
+                                                                    ifelse(Var1_ed_fin %in% "секунда", 1/86400,NA)))))))))%>% 
+  
+  mutate(`Time2` = ifelse(Var2_ed_fin %in% "none", 0,
+                          ifelse(Var2_ed_fin %in% "месяц", 30,
+                                 ifelse(Var2_ed_fin %in% c("день",	"сутки"), 1, 
+                                        ifelse(Var2_ed_fin %in% "час", 1/24,
+                                               ifelse(Var2_ed_fin %in% "минута", 1/1440, 
+                                                      ifelse(Var2_ed_fin %in% "секунда", 1/86400,NA))))))) %>% 
+  
+  mutate(`Time3` = ifelse(Var3_ed_fin %in% "none", 0,
+                          ifelse(Var3_ed_fin %in% c("день",	"сутки"), 1, 
+                                 ifelse(Var3_ed_fin %in% "час", 1/24,
+                                        ifelse(Var3_ed_fin %in% "минута", 1/1440,NA))))) %>%
+  
+  mutate(`Time4` = ifelse(Var4_ed_fin %in% "none", 0,
+                          ifelse(Var4_ed_fin %in% "минута", 1/1440,NA))) %>%
+  mutate(Time1_days = Var1 * Time1) %>% 
+  mutate(Time2_days = Var2 * Time2) %>%
+  mutate(Time3_days = Var3 * Time3) %>%
+  mutate(Time4_days = Var4 * Time4) %>%
+  rowwise() %>% 
+  mutate(Age = sum(Time1_days,Time2_days,Time3_days,Time4_days, na.rm=TRUE))
+
+
+
+#Версия датасета с обработанным возрастом (округление до целых в большую сторону - Age), переменными многоплодная - окружность груди
+df <- df %>%
+  mutate(`Age` = ceiling(`Age`)) %>%
+  mutate(across(c(`многоплодная`,`СЗРП`), function(x) as.factor(x))) %>%
+  mutate(across(c(`окружность головы`, `окружность груди`),  function(x) gsub(",", ".", x))) %>%
+  mutate(across(c(`окружность головы`, `окружность груди`), function(y) as.numeric(y))) %>%
+  select(`№ протокола`, `пол`, `мёртвый/живой`, `возраст`, `гестация`, `длина тела`, `масса тела`, `мозг`, `сердце`, `лёгкие`, 
+         `печень`, `селезёнка`, `почки`, `тимус`, `н/п`, `пжж`, `плацента`, `мацерация`, `ВПР`, `многоплодная`, 
+         `СЗРП`, `окружность головы`, `окружность груди`, `год`, `Age`)
+
+
+
+ 
+```
+
+
+
+
+
+
+# Фильтрация и создание нового датасета референсных значений df1 
+```{r, results='hide'}
+
+df1 <- df %>%
+  filter(!is.na(`№ протокола`) & 
+         !is.na(пол) &
+         Age <= 1 &
+         гестация >= 14 &
+         мацерация %in% c('нет', NA) &
+         !grepl(paste(c("ЦНС","КМС","ВПР","ДС","МПС","Даун","Арнольда-Киари","ГС","гс", "ОГС","ЖКТ", "бетическая фетопатия", "Эдвардс", "по медпоказаниям","ССС", "лимфангиоэктазия","да"),collapse = '|'), ВПР) &
+         многоплодная %in% c('нет', NA) &
+         !grepl('СЗРП|ЗВУР', СЗРП)) %>%
+  mutate(`мёртвый/живой` = ifelse(`мёртвый/живой` == "жив", "Живой", "Мёртвый"))  %>%
+  rename(`Пол` = `пол`,`Гестация` = `гестация`, `Длина тела` = `длина тела`, `Масса тела` = `масса тела`, `Мозг` = `мозг`, 
+         `Сердце` = `сердце`, `Лёгкие` = `лёгкие`, `Печень` = `печень`, `Селезёнка` = `селезёнка`, `Почки` = `почки`,
+         `Тимус`=`тимус`, `Надпочечники` = `н/п`, `Поджелудочная железа` = `пжж`, `Плацента` = `плацента`, 
+         `Мацерация` = `мацерация`, `Многоплодная` = `многоплодная`,`Окружность головы` = `окружность головы`, 
+         `Окружность груди` = `окружность груди`, `Год` = `год`, `Возраст в днях` = `Age`)
+
+
+```
+
+
+
+# Описательная статистика для работы с пропусками
+```{r, results='hide'}
+statistics <- list(
+      `Количество субъектов` = ~length(.x),
+      `Количество (есть данные)` = ~sum(!is.na(.x)),
+      `Нет данных` = ~sum(is.na(.x)),
+      `Ср. знач.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", mean(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Станд. отклон.` = ~ifelse(sum(!is.na(.x)) < 3, "Н/П*", sd(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `мин. - макс.` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(min(.x, na.rm = TRUE) %>% round(2), " - ", max(.x, na.rm = TRUE) %>% round(2))),
+      `Медиана` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", median(.x, na.rm = TRUE) %>% round(2) %>% as.character()),
+      `Q1 - Q3` = ~ifelse(sum(!is.na(.x)) == 0, "Н/П*", paste0(quantile(.x, 0.25, na.rm = TRUE) %>% round(2), " - ", quantile(.x, 0.75, na.rm = TRUE) %>% round(2)))
+)
+
+
+
+
+df1_all <- df1 %>%
+  mutate(`мёртвый/живой` = "Всего")
+
+
+df1_work <- rbind(df1, df1_all)
+
+
+```
+
+
+
+
+
+
+
+
+# Замена пропусков методом knn, k = 4
+```{r, warning = FALSE }
+
+
+df1_init <- as.data.frame(df1)
+
+# k - квадратный корень числа переменных 4
+preProcValues <- preProcess(df1_init %>% 
+                          dplyr::select(where(is.numeric)),
+                            method = c("knnImpute"),
+                            k = 4,
+                            knnSummary = mean)
+
+
+df1_ksqrt <- predict(preProcValues, df1_init, na.action = na.pass)
+
+
+
+
+procNames <- data.frame(col = names(preProcValues$mean), mean = preProcValues$mean, sd = preProcValues$std)
+for(i in procNames$col){
+ df1_ksqrt[i] <- df1_ksqrt[i]*preProcValues$std[i]+preProcValues$mean[i] 
+}
+
+
+df1_ksqrt$df_type <- "DF k=4"
+df1_init$df_type <- "Исходный DF"
+
+
+df1_all <- rbind(df1_init, df1_ksqrt)
+
+
+all_num <- df1 %>% 
+  select(where(is.numeric))
+
+vec_var <- names(all_num)
+
+
+for (i in 1:length(vec_var)){
+  
+ggplot(df1_all, aes(sample = df1_all[,vec_var[i]], color = as.factor(df_type))) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(color = "Тип импутации") +
+  ggtitle(paste("Q-Q plot для переменной", vec_var[i])) + xlab("Теоретические") + ylab("Выборочные")
+  
+ggsave(paste(vec_var[i],"na_imp_k4",".png"), 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100)
+}
+
+
+
+
+```
+
+
+# k - логарифм числа переменных числа переменных 2.8~3
+```{r, warning = FALSE }
+
+
+# k - логарифм числа переменных числа переменных 2.8~3
+preProcValues <- preProcess(df1_init %>% 
+                          dplyr::select(where(is.numeric)),
+                            method = c("knnImpute"),
+                            k = 3,
+                            knnSummary = mean)
+
+
+df1_kln <- predict(preProcValues, df1_init, na.action = na.pass)
+
+
+
+
+procNames <- data.frame(col = names(preProcValues$mean), mean = preProcValues$mean, sd = preProcValues$std)
+for(i in procNames$col){
+ df1_kln[i] <- df1_kln[i]*preProcValues$std[i]+preProcValues$mean[i] 
+}
+
+
+df1_kln$df_type <- "DF k=3"
+
+df1_all <- rbind(df1_init, df1_kln)
+
+
+
+for (i in 1:length(vec_var)){
+  
+qqplot <- ggplot(df1_all, aes(sample = df1_all[,vec_var[i]], color = as.factor(df_type))) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(color = "Тип импутации") +
+  ggtitle(paste("Q-Q plot для переменной", vec_var[i])) + xlab("Теоретические") + ylab("Выборочные")
+  
+
+  #Сохранение графиков
+  ggsave(plot = qqplot, paste(vec_var[i],"na_imp_k3",".png"), 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100)
+  
+}
+
+
+
+```
+
+
+# k - 5
+```{r, warning = FALSE }
+
+
+# k - равно 5
+preProcValues <- preProcess(df1_init %>% 
+                          dplyr::select(where(is.numeric)),
+                            method = c("knnImpute"),
+                            k = 5,
+                            knnSummary = mean)
+
+
+df1_k5 <- predict(preProcValues, df1_init, na.action = na.pass)
+
+
+
+
+procNames <- data.frame(col = names(preProcValues$mean), mean = preProcValues$mean, sd = preProcValues$std)
+for(i in procNames$col){
+ df1_k5[i] <- df1_k5[i]*preProcValues$std[i]+preProcValues$mean[i] 
+}
+
+
+df1_k5$df_type <- "DF k=5"
+
+df1_all <- rbind(df1_init, df1_k5)
+
+
+for (i in 1:length(vec_var)){
+  
+qqplot <- ggplot(df1_all, aes(sample = df1_all[,vec_var[i]], color = as.factor(df_type))) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(color = "Тип импутации") +
+  ggtitle(paste("Q-Q plot для переменной", vec_var[i])) + xlab("Теоретические") + ylab("Выборочные")
+  
+#Сохранение графиков
+ggsave(plot = qqplot, paste(vec_var[i],"na_imp_k5",".png"), 
+       width = 8.5, 
+       height = 9, 
+       dpi = 100)
+
+  
+}
+
+
+
+
+
+
+
+
+#Отдельно дл поджелудочной железы
+
+# k - равно 10, 15, 20, 25, 30
+preProcValues <- preProcess(df1_init %>% 
+                          dplyr::select(where(is.numeric)),
+                            method = c("knnImpute"),
+                            k = 30,
+                            knnSummary = mean)
+
+
+df1_k10 <- predict(preProcValues, df1_init, na.action = na.pass)
+
+
+i=12
+
+procNames <- data.frame(col = names(preProcValues$mean), mean = preProcValues$mean, sd = preProcValues$std)
+for(i in procNames$col){
+ df1_k10[i] <- df1_k10[i]*preProcValues$std[i]+preProcValues$mean[i] 
+}
+
+
+df1_k10$df_type <- "DF k=30"
+
+df1_all <- rbind(df1_init, df1_k10)
+
+
+
+  
+qqplot <- ggplot(df1_all, aes(sample = df1_all[,vec_var[i]], color = as.factor(df_type))) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(color = "Тип импутации") +
+  ggtitle(paste("Q-Q plot для переменной", vec_var[i])) + xlab("Теоретические") + ylab("Выборочные")
+  
+qqplot
+
+ggsave(plot = qqplot, paste(vec_var[i],"na_imp_k30",".png"), 
+       width = 8.5, 
+       height = 9, 
+       dpi = 100)
+
+
+
+```
+
+
+#Добавить группу всего!!!!!!!
+
+# Описательная статистика с разными методами импутации данных методом knn
+```{r, warning = FALSE }
+
+#Таблицы с описательной статистикой
+#Исходный набор данных
+stat_num_res <- df1_work %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных для исходного набора данных") %>%
+  width(width = 1.2)
+
+#Импутация
+
+df1_ksqrt_all <- df1_ksqrt %>%
+  mutate(`мёртвый/живой` = "Всего")
+
+df1_ksqrt_all <- rbind(df1_ksqrt_all,df1_ksqrt)
+
+stat_num_res <- df1_ksqrt_all %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных для набора данных с импутаией knn (k=4)") %>%
+  width(width = 1.2)
+
+
+
+
+
+#k=3
+
+stat_num_res <- df1_kln %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных для набора данных с импутаией knn (k=3)") %>%
+  width(width = 1.2)
+
+
+
+
+#k=5
+
+stat_num_res <- df1_k5 %>%
+  select(`мёртвый/живой`, where(is.numeric)) %>%
+  group_by(`мёртвый/живой`) %>%
+  summarise(across(where(is.numeric), statistics)) %>%
+  mutate(across(everything(), as.character)) %>% 
+  pivot_longer(!`мёртвый/живой`) %>%
+  separate(name, into  = c("Переменная","Статистика"), sep = "_") %>% 
+  dcast(`Переменная` + `Статистика` ~ `мёртвый/живой`, value.var = "value") 
+
+
+stat_num_res %>% 
+  flextable() %>%
+  theme_box() %>%
+  merge_v(c( "Переменная")) %>%
+  set_caption("Описательная статистика количественных переменных для набора данных с импутаией knn (k=5)") %>%
+  width(width = 1.2)
+
+
+```
+
+
+
+
+
+
+```{r, warning = FALSE }
+#Сохранение графиков по 4 метода на одном
+df1_all <- rbind(df1_init, df1_ksqrt , df1_kln ,df1_k5)
+
+
+for (i in 1:length(vec_var)){
+  
+qqplot <- ggplot(df1_all, aes(sample = df1_all[,vec_var[i]], color = as.factor(df_type)), alpha=0.2) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(color = "Тип импутации") +
+  ggtitle(paste("Q-Q plot для переменной", vec_var[i])) + xlab("Теоретические") + ylab("Выборочные")
+  
+
+  #Сохранение графиков
+  ggsave(plot = qqplot, paste(vec_var[i],"na_imp_knn",".png"), 
+  width = 8.5, 
+  height = 9, 
+  dpi = 100)
+  
+}
+
+
+
+
+```
+
+
+
+
+
+
