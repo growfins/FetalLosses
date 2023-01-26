@@ -1,0 +1,568 @@
+---
+title: "Processing Mean/Median/Mode UPD"
+author: "Evgeniia Molokova"
+date: "2023-01-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library (dplyr)
+library (tidyverse)
+library (tibble)
+library (readr)
+library (readxl)
+library (ggplot2)
+```
+
+# 1. Создание нового датасета с заменой пропущенных значений на среднее по каждой группе Гестационного возраста (группировка по неделям) - df1_process_mean
+
+## 1.1 Загрузка данных
+```{r}
+df1 <- read_csv("df1_csv.csv")
+
+df1_process_mean <- read_csv("df1_csv.csv")
+
+df1_process_mean <- as.tibble(df1_process_mean)
+
+df1_process_mean <-  df1_process_mean %>%
+  mutate(`Гестация` = `Гестация` %>% as.factor())
+```
+
+## 1.2 Замена пропущенных значений в количественных переменных на среднее по каждой группе Гестационного возраста (группировка по неделям)
+```{r}
+df1_process_mean <- df1_process_mean %>%
+  group_by(`Гестация`) %>%
+  mutate(`Длина тела` = `Длина тела` %>% replace_na (mean(`Длина тела`,na.rm=TRUE)))%>%
+  mutate(`Масса тела` = `Масса тела` %>% replace_na (mean(`Масса тела`,na.rm=TRUE)))%>%
+  mutate(`Мозг` = `Мозг` %>% replace_na (mean(`Мозг`,na.rm=TRUE)))%>%
+  mutate(`Сердце` = `Сердце` %>% replace_na (mean(`Сердце`,na.rm=TRUE)))%>%
+  mutate(`Лёгкие` = `Лёгкие` %>% replace_na (mean(`Лёгкие`,na.rm=TRUE)))%>%
+  mutate(`Печень` = `Печень` %>% replace_na (mean(`Печень`,na.rm=TRUE)))%>%
+  mutate(`Селезёнка` = `Селезёнка` %>% replace_na (mean(`Селезёнка`,na.rm=TRUE)))%>%
+  mutate(`Почки` = `Почки` %>% replace_na (mean(`Почки`,na.rm=TRUE)))%>%
+  mutate(`Тимус` = `Тимус` %>% replace_na (mean(`Тимус`,na.rm=TRUE)))%>%
+  mutate(`Надпочечники` = `Надпочечники` %>% replace_na (mean(`Надпочечники`,na.rm=TRUE)))%>%
+  mutate(`Поджелудочная железа` = `Поджелудочная железа` %>% replace_na (mean(`Поджелудочная железа`,na.rm=TRUE)))%>%
+  mutate(`Плацента` = `Плацента` %>% replace_na (mean(`Плацента`,na.rm=TRUE)))%>%
+  ungroup()
+
+df1_process_mean <- df1_process_mean %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_mean) #Обзор описательных статистик нового датасета
+
+write_csv(x = df1_process_mean, file = "df1_process_mean.csv") # Сохранение датасета с заменами на среднее значение 
+```
+
+
+# 2. Создание нового датасета с заменой пропущенных значений на медиану по каждой группе Гестационного возраста (группировка по неделям) - df1_process_median
+
+## 2.1 Загрузка данных 
+```{r}
+df1_process_median <- read_csv("df1_csv.csv")
+
+df1_process_median <- as.tibble(df1_process_median)
+
+df1_process_median <-  df1_process_median %>%
+  mutate(`Гестация` = `Гестация` %>% as.factor())
+```
+
+## 2.2 Замена пропущенных значений в количественных переменных на медиану по каждой группе Гестационного возраста (группировка по неделям)
+```{r}
+df1_process_median <- df1_process_median %>%
+  group_by(`Гестация`) %>%
+  mutate(`Длина тела` = `Длина тела` %>% replace_na (median(`Длина тела`,na.rm=TRUE)))%>%
+  mutate(`Масса тела` = `Масса тела` %>% replace_na (median(`Масса тела`,na.rm=TRUE)))%>%
+  mutate(`Мозг` = `Мозг` %>% replace_na (median(`Мозг`,na.rm=TRUE)))%>%
+  mutate(`Сердце` = `Сердце` %>% replace_na (median(`Сердце`,na.rm=TRUE)))%>%
+  mutate(`Лёгкие` = `Лёгкие` %>% replace_na (median(`Лёгкие`,na.rm=TRUE)))%>%
+  mutate(`Печень` = `Печень` %>% replace_na (median(`Печень`,na.rm=TRUE)))%>%
+  mutate(`Селезёнка` = `Селезёнка` %>% replace_na (median(`Селезёнка`,na.rm=TRUE)))%>%
+  mutate(`Почки` = `Почки` %>% replace_na (median(`Почки`,na.rm=TRUE)))%>%
+  mutate(`Тимус` = `Тимус` %>% replace_na (median(`Тимус`,na.rm=TRUE)))%>%
+  mutate(`Надпочечники` = `Надпочечники` %>% replace_na (median(`Надпочечники`,na.rm=TRUE)))%>%
+  mutate(`Поджелудочная железа` = `Поджелудочная железа` %>% replace_na (median(`Поджелудочная железа`,na.rm=TRUE)))%>%
+  mutate(`Плацента` = `Плацента` %>% replace_na (median(`Плацента`,na.rm=TRUE)))%>%
+  ungroup()
+
+
+df1_process_median <- df1_process_median %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_median) #Обзор описательных статистик нового датасета
+
+write_csv(x = df1_process_median, file = "df1_process_median.csv") # Сохранение датасета с заменами на медиану 
+```
+
+
+# 3. Создание нового датасета с заменой пропущенных значений на моду по каждой группе Гестационного возраста (группировка по неделям) - df1_process_mode
+
+## 3.1 Загрузка данных 
+```{r}
+df1_process_mode <- read_csv("df1_csv.csv")
+
+df1_process_mode <- as.tibble(df1_process_mode)
+
+df1_process_mode <-  df1_process_mode %>%
+  mutate(`Гестация` = `Гестация` %>% as.factor())
+```
+
+## 3.2 Замена пропущенных значений в количественных переменных на моду по каждой группе Гестационного возраста (группировка по неделям)
+```{r}
+ # Функция для вычисления моды
+mode <- function(x) {
+  ux <- na.omit(unique(x) )
+ tab <- tabulate(match(x, ux)); ux[tab == max(tab) ]
+}
+
+
+# Переменные и соответствующий гестационный возраст с несколькими модами: 
+
+mode(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Мозг`[df1_process_mode$Гестация == 35])
+mode(df1_process_mode$`Сердце`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Лёгкие`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Печень`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Селезёнка`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Почки`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Тимус`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Надпочечники`[df1_process_mode$Гестация == 39])
+mode(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 42])
+mode(df1_process_mode$`Плацента`[df1_process_mode$Гестация == 42])
+
+
+# Длина тела
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 20]), 28, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 20])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 21]), 26, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 21])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 22]), 28, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 22])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 23]), 30, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 23])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 24]), 30, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 24])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 25]), 31, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 25])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 26]), 33, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 26])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 27]), 34, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 27])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 28]), 36, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 28])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 29]), 38, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 29])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 30]), 41, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 30])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 31]), 42, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 31])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 32]), 40, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 32])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 33]), 45, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 33])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 34]), 44, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 34])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 35]), 47, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 35])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 36]), 48, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 36])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 37]), 50, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 37])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 38]), 50, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 38])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 39]), 53, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 39])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 40]), 53, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 40])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 41]), 54, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 41])
+
+df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 42]), 53, df1_process_mode$`Длина тела`[df1_process_mode$Гестация == 42])
+
+
+# Масса тела
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 24]), 700, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 24])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 25]), 750, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 25])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 28]), 1140, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 28])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 33]), 2200, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 33])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 35]), 2600, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 35])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 36]), 2000, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 36])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 37]), 2500, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 37])
+
+df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 42]), 3900, df1_process_mode$`Масса тела`[df1_process_mode$Гестация == 42])
+
+
+# Мозг
+df1_process_mode$Мозг[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 29]), 200, df1_process_mode$Мозг[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 30]), 190, df1_process_mode$Мозг[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 32]), 225, df1_process_mode$Мозг[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 33]), 250, df1_process_mode$Мозг[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 34]), 280, df1_process_mode$Мозг[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 37]), 340, df1_process_mode$Мозг[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Мозг[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Мозг[df1_process_mode$Гестация == 42]), 450, df1_process_mode$Мозг[df1_process_mode$Гестация == 42])
+
+
+# Сердце
+df1_process_mode$Сердце[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 20]), 2.4, df1_process_mode$Сердце[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 21]), 3.1, df1_process_mode$Сердце[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 22]), 4.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 23]), 4.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 24]), 5.2, df1_process_mode$Сердце[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 25]), 5.1, df1_process_mode$Сердце[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 26]), 6.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 27]), 6.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 28]), 5.9, df1_process_mode$Сердце[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 29]), 7.3, df1_process_mode$Сердце[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 30]), 8.1, df1_process_mode$Сердце[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 31]), 9.5, df1_process_mode$Сердце[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 32]), 10.5, df1_process_mode$Сердце[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 33]), 11.3, df1_process_mode$Сердце[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 34]), 13.8, df1_process_mode$Сердце[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 35]), 13.6, df1_process_mode$Сердце[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 36]), 16.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 37]), 16.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 38]), 17.0, df1_process_mode$Сердце[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 39]), 18.5, df1_process_mode$Сердце[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 40]), 25.3, df1_process_mode$Сердце[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 41]), 20.8, df1_process_mode$Сердце[df1_process_mode$Гестация == 41])
+
+df1_process_mode$Сердце[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Сердце[df1_process_mode$Гестация == 42]), 21.90, df1_process_mode$Сердце[df1_process_mode$Гестация == 42])
+
+
+# Лёгкие
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 20]), 13.8, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 25]), 17.6, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 27]), 22.0, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 28]), 26.0, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 31]), 34.3, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 32]), 39.7, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 33]), 39.1, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 40]), 54.0, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Лёгкие[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Лёгкие[df1_process_mode$Гестация == 42]), 68.0, df1_process_mode$Лёгкие[df1_process_mode$Гестация == 42])
+
+
+# Печень
+df1_process_mode$Печень[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 20]), 19.5, df1_process_mode$Печень[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 21]), 20.0, df1_process_mode$Печень[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 22]), 27.0, df1_process_mode$Печень[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 23]), 25.0, df1_process_mode$Печень[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 24]), 35.0, df1_process_mode$Печень[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 25]), 35.0, df1_process_mode$Печень[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 26]), 40.0, df1_process_mode$Печень[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 27]), 35.0, df1_process_mode$Печень[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 28]), 38.5, df1_process_mode$Печень[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 29]), 57.7, df1_process_mode$Печень[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 30]), 60.0, df1_process_mode$Печень[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 31]), 68.2, df1_process_mode$Печень[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 32]), 73.30, df1_process_mode$Печень[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 33]), 40.4, df1_process_mode$Печень[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 34]), 85.0, df1_process_mode$Печень[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 35]), 93.0, df1_process_mode$Печень[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 36]), 120.0, df1_process_mode$Печень[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 37]), 110.0, df1_process_mode$Печень[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 38]), 138.0, df1_process_mode$Печень[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 39]), 153.0, df1_process_mode$Печень[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 40]), 170.0, df1_process_mode$Печень[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 41]), 120.0, df1_process_mode$Печень[df1_process_mode$Гестация == 41])
+
+df1_process_mode$Печень[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Печень[df1_process_mode$Гестация == 42]), 191.30, df1_process_mode$Печень[df1_process_mode$Гестация == 42])
+
+
+# Селезёнка
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 20]), 0.7, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 21]), 0.7, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 22]), 1.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 23]), 1.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 24]), 1.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 25]), 1.5, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 26]), 2.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 27]), 1.7, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 28]), 2.5, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 29]), 2.1, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 30]), 3.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 31]), 3.3, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 32]), 4.1, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 33]), 4.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 34]), 5.5, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 35]), 6.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 36]), 7.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 37]), 8.3, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 38]), 10.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 39]), 10.0, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 40]), 10.2, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 41]), 15.1, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 41])
+
+df1_process_mode$Селезёнка[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Селезёнка[df1_process_mode$Гестация == 42]), 11.40, df1_process_mode$Селезёнка[df1_process_mode$Гестация == 42])
+
+
+# Почки
+df1_process_mode$Почки[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 20]), 4.5, df1_process_mode$Почки[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 21]), 6.3, df1_process_mode$Почки[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 22]), 6.1, df1_process_mode$Почки[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 23]), 6.5, df1_process_mode$Почки[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 24]), 7.5, df1_process_mode$Почки[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 25]), 8.4, df1_process_mode$Почки[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 26]), 9.1, df1_process_mode$Почки[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 27]), 10.1, df1_process_mode$Почки[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 28]), 11.0, df1_process_mode$Почки[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 29]), 10.0, df1_process_mode$Почки[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 30]), 12.9, df1_process_mode$Почки[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 31]), 13.8, df1_process_mode$Почки[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 32]), 16.2, df1_process_mode$Почки[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 33]), 15.5, df1_process_mode$Почки[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 34]), 18.1, df1_process_mode$Почки[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 35]), 20.8, df1_process_mode$Почки[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 36]), 21.8, df1_process_mode$Почки[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 37]), 23.0, df1_process_mode$Почки[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 38]), 28.4, df1_process_mode$Почки[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 39]), 30.6, df1_process_mode$Почки[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 40]), 33.4, df1_process_mode$Почки[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 41]), 25.3, df1_process_mode$Почки[df1_process_mode$Гестация == 41])
+
+df1_process_mode$Почки[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Почки[df1_process_mode$Гестация == 42]), 32.40, df1_process_mode$Почки[df1_process_mode$Гестация == 42])
+
+
+# Тимус
+df1_process_mode$Тимус[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 20]), 1.1, df1_process_mode$Тимус[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 21]), 1.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 22]), 1.2, df1_process_mode$Тимус[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 23]), 1.5, df1_process_mode$Тимус[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 24]), 2.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 25]), 2.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 26]), 3.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 27]), 2.1, df1_process_mode$Тимус[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 28]), 3.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 29]), 3.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 30]), 3.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 31]), 4.5, df1_process_mode$Тимус[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 32]), 4.5, df1_process_mode$Тимус[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 33]), 4.6, df1_process_mode$Тимус[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 34]), 9.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 35]), 6.6, df1_process_mode$Тимус[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 36]), 6.5, df1_process_mode$Тимус[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 37]), 5.3, df1_process_mode$Тимус[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 38]), 12.6, df1_process_mode$Тимус[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 39]), 10.0, df1_process_mode$Тимус[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 40]), 12.9, df1_process_mode$Тимус[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Тимус[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Тимус[df1_process_mode$Гестация == 41]), 11.4, df1_process_mode$Тимус[df1_process_mode$Гестация == 41])
+
+
+# Надпочечники
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 20] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 20]), 1.3, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 20])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 21]), 1.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 22] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 22]), 2.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 22])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 23] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 23]), 2.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 23])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 24] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 24]), 2.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 24])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 25] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 25]), 2.2, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 25])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 26] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 26]), 2.5, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 26])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 27] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 27]), 2.5, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 27])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 28]), 3.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 29]), 3.1, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 30]), 3.5, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 31]), 3.2, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 32] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 32]), 4.6, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 32])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 33] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 33]), 4.4, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 33])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 34]), 4.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 34])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 35] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 35]), 6.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 35])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 36] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 36]), 6.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 36])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 37] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 37]), 7.0, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 37])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 38] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 38]), 8.4, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 38])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 39]), 8.3, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 39])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 40]), 10.6, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 40])
+
+df1_process_mode$Надпочечники[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$Надпочечники[df1_process_mode$Гестация == 41]), 8.5, df1_process_mode$Надпочечники[df1_process_mode$Гестация == 41])
+
+
+# Поджелудочная железа
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 30]), 1.5, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 30])
+
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 34] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 34]), 2.0, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 34])
+
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 39] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 39]), 3.6, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 39])
+
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 40] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 40]), 3.9, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 40])
+
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 41] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 41]), 3.2, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 41])
+
+df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 42]), 3.8, df1_process_mode$`Поджелудочная железа`[df1_process_mode$Гестация == 42])
+
+
+# Плацента
+df1_process_mode$Плацента[df1_process_mode$Гестация == 21] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 21]), 120, df1_process_mode$Плацента[df1_process_mode$Гестация == 21])
+
+df1_process_mode$Плацента[df1_process_mode$Гестация == 28] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 28]), 210, df1_process_mode$Плацента[df1_process_mode$Гестация == 28])
+
+df1_process_mode$Плацента[df1_process_mode$Гестация == 29] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 29]), 220, df1_process_mode$Плацента[df1_process_mode$Гестация == 29])
+
+df1_process_mode$Плацента[df1_process_mode$Гестация == 30] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 30]), 200, df1_process_mode$Плацента[df1_process_mode$Гестация == 30])
+
+df1_process_mode$Плацента[df1_process_mode$Гестация == 31] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 31]), 170, df1_process_mode$Плацента[df1_process_mode$Гестация == 31])
+
+df1_process_mode$Плацента[df1_process_mode$Гестация == 42] <- ifelse(is.na(df1_process_mode$Плацента[df1_process_mode$Гестация == 42]), 460, df1_process_mode$Плацента[df1_process_mode$Гестация == 42])
+
+
+df1_process_mode <- df1_process_mode %>%
+  group_by(`Гестация`) %>%
+  mutate(`Мозг` = `Мозг` %>% replace_na (mode(`Мозг`)))%>%
+  mutate(`Лёгкие` = `Лёгкие` %>% replace_na (mode(`Лёгкие`)))%>%
+  mutate(`Поджелудочная железа` = `Поджелудочная железа` %>% replace_na (mode(`Поджелудочная железа`)))%>%
+  mutate(`Плацента` = `Плацента` %>% replace_na (mode(`Плацента`)))%>%
+  ungroup()
+
+df1_process_mode <- df1_process_mode %>%
+  mutate(across(c(`Длина тела`,`Масса тела`,`Мозг`,`Сердце`,`Лёгкие`,`Печень`, `Селезёнка`,`Почки`,`Тимус`,`Надпочечники`,`Поджелудочная железа`,`Плацента`,`Окружность головы`,`Окружность груди`), function(x) round(x,2)))
+
+summary(df1_process_mode) # Обзор описательных статистик нового датасета
+
+write_csv(x = df1_process_mode, file = "df1_process_mode.csv") # Сохранение датасета с заменами на моду 
+```
+
+
+
