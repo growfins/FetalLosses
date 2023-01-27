@@ -81,7 +81,7 @@ At the same time, we exclude the “deletion of NA” dataset from comparative a
 
 **(Example of graphical visualisation)** for features with and without statistically significant differences between imputation methods.
 
-![Rplot03](https://user-images.githubusercontent.com/102663823/215138219-07f2ea10-790f-421a-b9b7-1128c5712e86.svg)
+![Rplot05](https://user-images.githubusercontent.com/102663823/215149469-47b40a08-916d-47eb-b038-3b5f858dbdbe.svg)
 ![Rplot04](https://user-images.githubusercontent.com/102663823/215138207-09ead217-6066-4549-a370-0af85584a951.svg)
 
 #### Reference values assessment
