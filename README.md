@@ -98,9 +98,9 @@ The significant differences in several variables between primary dataset and its
 
 | Feature   | Week | p-value |
 |:---------:|:----:|:-------:|
-|  Pancreas |  23  | <0.0001 |
-| Splen     | 23   | <0.0001 |
-| Pancreas  | 24   | <0.0001 |
+|  Pancreas |  23  | 0.026   |
+| Splen     | 23   | 0.034   |
+| Pancreas  | 24   | 0.038   |
 
 ### Conclusion and further plans
 
