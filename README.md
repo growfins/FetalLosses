@@ -31,7 +31,7 @@ In our project we were provided with a **dataset** based on the protocols of fet
 ### Workflow
 The workflow of the project presented at the following scheme. Some part of scheme will be discussed below.
 
-![Диаграмма без названия drawio (1)](https://user-images.githubusercontent.com/102663823/215098535-a058ffff-8048-44c9-b780-9ed821562903.svg)
+![Диаграмма без названия drawio (3)](https://user-images.githubusercontent.com/102663823/215112950-505c069f-69aa-4b8d-86e1-a97fa7c8deaf.svg)
 
 #### Work with raw data
 The raw data were organized in 10 Excel files. At this stage one large .csv file with more that 10000 rows was combined.
@@ -77,14 +77,42 @@ The following descriptive statistic were selected:
 
 At the same time, we exclude the “deletion of NA” dataset from comparative analysis because of its unformativeness. Such data will evidently have strong differs from the others due to decreasing number of observations.
 
+**Results were visualized** using [violin plots (ggpubr)](http://rpkgs.datanovia.com/ggpubr/reference/ggviolin.html). The “deletion of NA” dataset was also included to compare the differences visually.
+
+**(Example of graphical visualisation)** for features with and without statistically significant differences between imputation methods.
+
+![Rplot03](https://user-images.githubusercontent.com/102663823/215138219-07f2ea10-790f-421a-b9b7-1128c5712e86.svg)
+![Rplot04](https://user-images.githubusercontent.com/102663823/215138207-09ead217-6066-4549-a370-0af85584a951.svg)
+
+#### Reference values assessment
+
+According to the results of the work, the statistical report was formed.
+
 **(An extract from the statistical report on the comparative analysis result. Feature - Body mass)**
 
 <img width="1512" alt="image" src="https://user-images.githubusercontent.com/102663823/215101048-082ecd03-dc9d-497e-81be-4d0b918eff72.png">
 
-**Results were visualized** using [violin plots (ggpubr)](http://rpkgs.datanovia.com/ggpubr/reference/ggviolin.html). The “deletion of NA” dataset was also included to compare the differences visually.
+### Results
 
-**(Example of graphical visualisation)**
+The significant differences in several variables between primary dataset and its imputated variants were identified:
 
-![Rplot2](https://user-images.githubusercontent.com/102663823/215097866-9eca904d-711c-4f2e-ad71-19f5a4dccd0d.svg)
+| Feature   | Week |                                  Pairwise comparison results                              | p-value |
+|:---------:|:----:|:-----------------------------------------------------------------------------------------:|:-------:|
+|  Pancreas |  23  | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
+| Splen     | 23   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
+| Pancreas  | 24   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
+
+### Conclusion and further plans
+
+Since the number of differing features is small (1%), we suggest that the application of different imputation methods can be considered as an alternative to complete exclusion an object from the dataset.
+
+There are some limitations of imputation methods identified:
 
 
+
+In further work we are going to compare our resuls with data from various literary sources and built a ML-model for predicting fetus growth and/or vitality rate.
+
+### Literature
+
+
+### Materials & methods 
