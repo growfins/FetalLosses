@@ -112,8 +112,14 @@ There are some limitations of imputation methods identified:
 
 In further work we are going to compare our resuls with data from various literary sources and built a ML-model for predicting fetus growth and/or vitality rate.
 
-### Literature
-Phillips JB, Billson VR, Forbes AB. Autopsy standards for fetal lengths and organ weights of an Australian perinatal population. Pathology. 2009;41(6):515-26. 
+### Literature and references
+1. R Core Team (2022). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.  URL https://www.R-project.org/.
+2. Wickham H, Averick M, Bryan J, Chang W, McGowan L, François R, et al. Welcome to the Tidyverse. J Open Source Softw. 2019 Nov 21;4(43):1686.
+3. ggplot2 Based Publication Ready Plots • ggpubr [Internet]. [cited 2023 Jan 27]. Available from: https://rpkgs.datanovia.com/ggpubr/
+4. Pipe-Friendly Framework for Basic Statistical Tests • rstatix [Internet]. [cited 2023 Jan 27]. Available from: https://rpkgs.datanovia.com/rstatix/
+5. Resources | Welcome to amices [Internet]. [cited 2023 Jan 27]. Available from: https://amices.org/
+6. Phillips JB, Billson VR, Forbes AB. Autopsy standards for fetal lengths and organ weights of an Australian perinatal population. Pathology. 2009;41(6):515-26. doi: 10.1080/00313020903041093. PMID: 19588281.
+
 
 ### Links
 
