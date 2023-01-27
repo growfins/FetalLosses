@@ -94,13 +94,13 @@ According to the results of the work, the statistical report was formed.
 
 ### Results
 
-The significant differences in several variables between primary dataset and its imputated variants were identified:
+The significant differences in several variables between primary dataset and its imputated variants were identified in pairwise comparison:
 
-| Feature   | Week |                                  Pairwise comparison results                              | p-value |
-|:---------:|:----:|:-----------------------------------------------------------------------------------------:|:-------:|
-|  Pancreas |  23  | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
-| Splen     | 23   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
-| Pancreas  | 24   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | <0.0001 |
+| Feature   | Week | p-value |
+|:---------:|:----:|:-------:|
+|  Pancreas |  23  | <0.0001 |
+| Splen     | 23   | <0.0001 |
+| Pancreas  | 24   | <0.0001 |
 
 ### Conclusion and further plans
 
@@ -113,6 +113,38 @@ There are some limitations of imputation methods identified:
 In further work we are going to compare our resuls with data from various literary sources and built a ML-model for predicting fetus growth and/or vitality rate.
 
 ### Literature
+Phillips JB, Billson VR, Forbes AB. Autopsy standards for fetal lengths and organ weights of an Australian perinatal population. Pathology. 2009;41(6):515-26. 
 
+### Links
 
-### Materials & methods 
+All statistical analysis was performed using [R Statistical Software (version 4.2.1)](https://www.r-project.org/) and following libraries:  
+
+[dplyr](https://dplyr.tidyverse.org/) 
+
+[tibble](https://tibble.tidyverse.org/)
+
+[stringr](https://stringr.tidyverse.org/)
+
+[readr](https://readr.tidyverse.org/)
+
+[readxl](https://readxl.tidyverse.org/)
+
+[data.table](https://cran.r-project.org/web/packages/data.table/index.html)
+
+[flextable](https://ardata-fr.github.io/flextable-book/)
+
+[mice](https://cran.r-project.org/web/packages/mice/mice.pdf)
+
+[ggmice](https://amices.org/ggmice/articles/ggmice.html)
+
+[ggplot2](https://ggplot2.tidyverse.org/)
+
+[Rmisc](https://cran.r-project.org/web/packages/Rmisc/index.html)
+
+[tidyr](https://tidyr.tidyverse.org/)
+
+[plyr](https://cran.r-project.org/web/packages/plyr/index.html)
+
+[ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html)
+
+[rstatix](https://cran.r-project.org/web/packages/rstatix/index.html)
