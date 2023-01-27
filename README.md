@@ -42,14 +42,14 @@ The dataset was equally structured, and processed for possible omissions and typ
 The key feature of data cleansing was the live birth feature. Data were collected basing on the mortality reports, so the live birth and time of living became separate columns of data. During this stage, values confused between live birth and time of living were joined to one age column, after which the column was recalculated to days. 
 
 #### Filtration
-A more detailed description of filtration criteria is given in the following paragraph. All filtered cases (order is important) should have:
-1. no report number and gender missings;
-2. live birth less than 1 day (less than 24h, inclusive);
-3. gestational age between 20w and 42w, inclusive;
-4. no maceration;
-5. chosen congenital disorders (infection, aspiration, pneumonia, no any);
-6. no multiple pregnancy;
-7. no fetal growth restriction
+A more detailed description of exclusion criteria are the following (order is important):
+1. report number or gender is missing;
+2. live birth more than 24h;
+3. gestational age less 20w and more 42w;
+4. the presence of maceration;
+5. chosen congenital disorders;
+6. multiple pregnancy;
+7. fetal growth restrictions.
 
 The filtered database consisted of 3,148 cases, which morphometric parameters were grouped according to the gestational age.
 
