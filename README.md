@@ -31,7 +31,7 @@ In our project we were provided with a **dataset** based on the protocols of fet
 ### Workflow
 The workflow of the project presented at the following scheme. Some part of scheme will be discussed below.
 
-![Диаграмма без названия drawio](https://user-images.githubusercontent.com/102663823/215062479-fb413689-e3d8-4035-8eae-659f90595874.svg)
+![Диаграмма без названия drawio (1)](https://user-images.githubusercontent.com/102663823/215098535-a058ffff-8048-44c9-b780-9ed821562903.svg)
 
 #### Work with raw data
 The raw data were organized in 10 Excel files. At this stage one large .csv file with more that 10000 rows was combined.
@@ -71,19 +71,20 @@ The following descriptive statistic were selected:
 
 **The comparative analysis** between primary and new datasets (grouped according to the gestational age) was performed with the Friedman test as a non-parametric alternative to the one-way ANOVA with repeated measures (most of data did not have normal distribution). 
 
-![Rplot](https://user-images.githubusercontent.com/102663823/215095427-4193e47d-70e5-47a9-ab58-30a259d811b0.svg)
+**(Graphical example of non-normally distributed data. Feature - Brain mass)**
 
-*(example of non-normally distributed data)*
+![Rplot](https://user-images.githubusercontent.com/102663823/215095427-4193e47d-70e5-47a9-ab58-30a259d811b0.svg)
 
 At the same time, we exclude the “deletion of NA” dataset from comparative analysis because of its unformativeness. Such data will evidently have strong differs from the others due to decreasing number of observations.
 
-Results were visualized using violin plots [ggpubr](](http://rpkgs.datanovia.com/ggpubr/reference/ggviolin.html). The “deletion of NA” dataset was also included to compare the differences visually.
+**(An extract from the statistical report on the comparative analysis result. Feature - Body mass)**
+
+<img width="1512" alt="image" src="https://user-images.githubusercontent.com/102663823/215101048-082ecd03-dc9d-497e-81be-4d0b918eff72.png">
+
+**Results were visualized** using [violin plots (ggpubr)](http://rpkgs.datanovia.com/ggpubr/reference/ggviolin.html). The “deletion of NA” dataset was also included to compare the differences visually.
+
+**(Example of graphical visualisation)**
 
 ![Rplot2](https://user-images.githubusercontent.com/102663823/215097866-9eca904d-711c-4f2e-ad71-19f5a4dccd0d.svg)
 
-*(example of graphical visualisation)*
 
-#### 
-There were identified significant differences between dataframe with missing values and its imputation variants in several variables in appliance with gestational age. ……. However, we didn’t include the “deletion of NA” dataset in comparative analysis because of its…..
-
-Reference values………..
