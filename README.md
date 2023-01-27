@@ -96,11 +96,11 @@ According to the results of the work, the statistical report was formed.
 
 The significant differences in several variables between primary dataset and its imputated variants were identified in pairwise comparison:
 
-| Feature   | Week | p-value |
-|:---------:|:----:|:-------:|
-|  Pancreas |  23  | 0.026   |
-| Splen     | 23   | 0.034   |
-| Pancreas  | 24   | 0.038   |
+| Feature   | Week |                                  Pairwise comparison results                              | p-value |
+|:---------:|:----:|:-----------------------------------------------------------------------------------------:|:-------:|
+|  Pancreas |  23  | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.026   |
+| Splen     | 23   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.034   |
+| Pancreas  | 24   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.038   |
 
 ### Conclusion and further plans
 
