@@ -79,36 +79,26 @@ At the same time, we exclude the “deletion of NA” dataset from comparative a
 
 **Results were visualized** using [violin plots (ggpubr)](http://rpkgs.datanovia.com/ggpubr/reference/ggviolin.html). The “deletion of NA” dataset was also included to compare the differences visually.
 
-**(Example of graphical visualisation)** for features with and without statistically significant differences between imputation methods.
+**(Example of graphical visualisation)**
 
-![Rplot05](https://user-images.githubusercontent.com/102663823/215149469-47b40a08-916d-47eb-b038-3b5f858dbdbe.svg)
 ![Rplot04](https://user-images.githubusercontent.com/102663823/215138207-09ead217-6066-4549-a370-0af85584a951.svg)
 
 #### Reference values assessment
 
 According to the results of the work, the statistical report was formed.
 
-**(An extract from the statistical report on the comparative analysis result. Feature - Body mass)**
+**(An extract from the statistical report on the comparative analysis result)**
 
-<img width="1512" alt="image" src="https://user-images.githubusercontent.com/102663823/215101048-082ecd03-dc9d-497e-81be-4d0b918eff72.png">
+<img width="1463" alt="image" src="https://user-images.githubusercontent.com/102663823/215242979-f0578757-7ee5-464f-bc51-fdb68be809ac.png">
 
 ### Results
 
-The significant differences in several variables between primary dataset and its imputated variants were identified in pairwise comparison:
-
-| Feature   | Week |                                  Pairwise comparison results                              | p-value |
-|:---------:|:----:|:-----------------------------------------------------------------------------------------:|:-------:|
-|  Pancreas |  23  | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.026   |
-| Splen     | 23   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.034   |
-| Pancreas  | 24   | KNN_k=5 VS init,  KNN_k=5 VS mean,  KNN_k=5 VS median,  KNN_k=5 VS mode,  KNN_k=5 VS mice | 0.038   |
+The significant differences between primary dataset and its imputated variants in appliance with gestational age were identified for spleen at 22, 23, 24, 26, 27 weeks of gestation with p-values <0.0001, <0.0001, <0.0001, <0.0001, 0.0012, respectively.
+However, after the pairwise post-hoc test for multiple comparisons of mean rank sums for unreplicated blocked data (Nemenyi-Test) no pairwise differences were found.
 
 ### Conclusion and further plans
 
 Since the number of differing features is small (1%), we suggest that the application of different imputation methods can be considered as an alternative to complete exclusion an object from the dataset.
-
-There are some limitations of imputation methods identified:
-
-
 
 In further work we are going to compare our resuls with data from various literary sources and built a ML-model for predicting fetus growth and/or vitality rate.
 
@@ -154,3 +144,17 @@ All statistical analysis was performed using [R Statistical Software (version 4.
 [ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html)
 
 [rstatix](https://cran.r-project.org/web/packages/rstatix/index.html)
+
+[tydyverse](https://www.tidyverse.org/)
+
+[reshape2](https://cran.r-project.org/web/packages/reshape2/index.html)
+
+[caret](https://topepo.github.io/caret/)
+
+[RANN](https://cran.r-project.org/web/packages/RANN/index.html)
+
+[openxlsx](https://cran.r-project.org/web/packages/openxlsx/index.html)
+
+[stats](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/00Index.html)
+
+[PMCMRplus](https://cran.r-project.org/web/packages/PMCMRplus/index.html)
