@@ -98,7 +98,7 @@ However, after the pairwise post-hoc test for multiple comparisons of mean rank 
 
 ### Conclusion and further plans
 
-Since the number of differing features is small (1%), we suggest that the application of different imputation methods can be considered as an alternative to complete exclusion an object from the dataset.
+We did not observe any significant pairwise differences in variables grouping by gestational age between the primary dataframe and its imputation variants. Thus, we suggest that the application of different imputation methods can be considered as an alternative to complete exclusion an object from the dataset.
 
 In further work we are going to compare our resuls with data from various literary sources and built a ML-model for predicting fetus growth and/or vitality rate.
 
