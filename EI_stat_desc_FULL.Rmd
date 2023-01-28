@@ -1,0 +1,302 @@
+---
+title: "EI_stat for imput"
+author: "Ivanova Ekaterina"
+date: "2023-01-21"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library (tidyverse)
+library (readxl)
+library (readr)
+library (tibble)
+library (tidyr)
+library (flextable)
+library (dplyr)
+library (stringr)
+library(flextable)
+library(reshape2)
+library(caret)
+#install.packages(future.apply)
+#library(future.apply)
+#install.packages(RANN)
+library(RANN)
+
+library(ggplot2)
+library(openxlsx)
+library(rstatix)
+library(stats)
+
+
+#install.packages(c("zoo","xts","quantmod"))
+#install.packages( "DMwR_0.4.1.tar.gz", repos=NULL, type="source" )
+#library(DMwR)
+
+#install.packages(PMCMRplus)
+library(PMCMRplus)
+```
+
+
+
+```{r, results='hide', warning = FALSE, echo=FALSE, message=FALSE}
+#Итоговая импутация методом knn, k=5
+
+#открываем дата фрейм после фильтрации по критериям
+df1 <- read_csv("df1_csv.csv")
+
+
+df1_init <- as.data.frame(df1)
+
+
+# k - равно 5
+#preProcValues <- preProcess(df1_init %>% 
+                          #dplyr::select(where(is.numeric)),
+                            #method = c("knnImpute"),
+                            #k = 5,
+                            #knnSummary = mean)
+
+
+#df1_knn5 <- predict(preProcValues, df1_init, na.action = na.pass)
+
+
+
+
+#procNames <- data.frame(col = names(preProcValues$mean), mean = preProcValues$mean, sd = preProcValues$std)
+#for(i in procNames$col){
+# df1_knn5[i] <- df1_knn5[i]*preProcValues$std[i]+preProcValues$mean[i] 
+#}
+
+
+#df1_knn5$impute_type <- "KNN_k=5"
+#write.csv(df1_knn5, "df1_knn5.csv")
+
+```
+
+
+```{r, results='hide', warning = FALSE, echo=FALSE, message=FALSE}
+#Открываем все дата фреймы с разными методами импутации из отдельных файлов
+df1_init$impute_type <- "init"
+
+
+df1_complcases <- read_csv("df1_na_csv.csv")
+df1_complcases$impute_type <- "remove_all_NA"
+
+
+df1_mean <- read_csv("df1_process_mean.csv")
+df1_mean$impute_type <- "mean"
+
+df1_mode <- read_csv("df1_process_mode.csv")
+df1_mode$impute_type <- "mode"
+
+df1_median <- read_csv("df1_process_median.csv")
+df1_median$impute_type <- "median"
+
+df1_mice <- read_csv("MICE_imputation.csv")
+
+df1_mice <- df1_mice %>%
+  mutate(`СЗРП` = NA)  %>%
+  relocate(`СЗРП`, .after = `Многоплодная`) %>%
+  mutate(impute_type = "mice")
+
+
+df1_mice$impute_type <- "mice"
+
+df1_knn5 <- read_excel("df1_knn5.xlsx")
+
+df1_knn5 <- df1_knn5 %>%
+  mutate(`№ протокола` = round(`№ протокола`,0))
+  
+
+df1_imput <- rbind(df1_init, df1_complcases, df1_mean, df1_mode, df1_median, df1_mice, df1_knn5)
+
+#Удаляем дубль 687 2011
+df1_imput <- df1_imput %>%
+  filter(!row_number() %in% c(2200, 5532, 8680, 11828, 14976, 18124))
+
+df1_imput <- df1_imput %>%
+  mutate(`id` = paste(`№ протокола`, `Год`))
+
+
+```
+
+
+
+```{r, results='hide', warning = FALSE, echo=FALSE}
+
+#Подготовка функций для вывода таблиц с описательной статистикой по каждой неделе для каждого из параметров с учетом групп, которые представляют собой типы импутации данных. В рамках функции также предусмотрено встравивание результатов статистических тестов.
+
+#Сами функции не могут быть представлены для публичного доступа.
+
+#Результирующая таблица со статистиками сохранена в формате xlsx (table_stat_all), код для ее вывода в ворд в самом конце скрипта.
+
+
+param <- c("Длина тела", "Масса тела", "Мозг", "Сердце", "Лёгкие", "Печень", "Селезёнка", "Почки", "Тимус", "Надпочечники",
+           "Поджелудочная железа", "Плацента")
+
+df1_imput_long <- df1_imput %>%
+  pivot_longer(cols = all_of(param), names_to = "parameter", values_to = "value") 
+
+
+
+
+#param <- c("Длина тела", "Масса тела")
+
+
+group <-  c("init","remove_all_NA", "mean", "median", "mode", "mice", "KNN_k=5") 
+ 
+
+weektab <- as.data.frame(table(df1_imput_long$Гестация))
+
+
+weektab <- weektab %>%
+  mutate(week = paste(Var1, "неделя"))
+
+
+week_report <- as.character(weektab$week)
+week <- as.character(weektab$Var1)
+
+
+parameter <- param
+parameter_rus <- param
+
+col_param <- c("N","NA number","Mean ± SD","5th percentile","25th percentile", "50th percentile", "75th percentile", "95th percentile")
+
+
+
+header <- c("Неделя гестации/Параметр/Статистика","Исходный набор данных после фильтрации","Удаление всех пропусков", "Замещение средним", "Замещение медианой", "Замещение модой", "MICE", "KNN (k=5)")
+
+
+#Убираем окружности
+df1_imput_final <-  df1_imput_long %>%
+  rename(group = impute_type, week = `Гестация`) %>%
+  filter(!grepl('Окружность', parameter)) 
+  
+  
+df1_imput_final <- as.data.frame(df1_imput_final)
+
+df1_imput_compar <- df1_imput_final %>%
+  select(`id`, week, group, parameter, value) %>%
+  mutate(week_param = paste(week, "_", parameter)) 
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#Скрипт для теста Фридмана и post-hoc анализа
+
+
+df1_imput_compar <- df1_imput_compar %>%
+  filter(group != "remove_all_NA")
+
+week_param <- as.vector(df1_imput_compar$week_param)
+week_param <- unique(week_param)
+
+
+#Сравнение для визитов и параметров 
+friedman_res <- NULL
+factor_week<- NULL
+pairs_week <- NULL
+dim_check <- NULL
+
+for (i in 1:length(week_param)) {
+ 
+    df_week_param2 <- NULL
+    df_week_mat <- NULL
+    df_week_param2 <- df1_imput_compar[which(df1_imput_compar$week_param == week_param[[i]]),]
+    df_week_mat  <-  df_week_param2 %>%
+        spread(group, value) %>%
+        select(contains(c("init", "remove_all_NA","KNN_k=5", "mean", "median", "mice", "mode")))
+    df_week_mat <- as.matrix(df_week_mat)
+    df_week_mat <- df_week_mat[complete.cases(df_week_mat),]
+    
+        if (sum(dim(df_week_mat)) == 0) {
+          
+          friedman_res[i] = "Not enough observations"
+          factor_week[i]  =  week_param[i]
+          pairs_week[i] = "Not enough observations"
+          
+        }else{
+    
+            friedman_res[i]  =  round(friedman.test(df_week_mat)$p.value, 4)
+            factor_week[i]  =  week_param[i]
+    
+            if (friedman_res[i] > 0.05 | is.na(friedman_res[i])){
+      
+              pairs_week[i] <- "No statistically significant differences"
+      
+            }else{
+      
+              df_week_mat <- df_week_mat[complete.cases(df_week_mat),]
+              rownames(df_week_mat) <- c(1:nrow(df_week_mat))
+              pwc <- NULL  
+              pwc <- frdAllPairsNemenyiTest(df_week_mat)
+              pwc <- data.frame(group1 = row.names(pwc$p.value), pwc$p.value)
+              pwc <- pivot_longer(pwc, !group1)
+              pwc$groups <- paste(pwc$group1, "VS" ,pwc$name)
+              pwc <- pwc[which(pwc$value <=0.05),]
+        
+                  if (nrow(pwc) == 0) {
+          
+                    pairs_week[i] <- "No statistically significant pairwise differences"
+          
+                  }else{
+          
+                    pairs_week[i] <- as.vector(toString(pwc$groups))
+                  }
+            }
+        }
+}
+
+res_fin <- tibble(`p-value` = as.character(friedman_res), `Factor` = factor_week, `Pairwise` =  pairs_week)
+
+
+```
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#Готовим таблицу для вставки в описательную статистику
+res_fin_insert <- res_fin %>%
+  separate(Factor, into  = c("week","parameter" ), sep = "_") %>%
+  mutate(`p_val` = if_else(`p-value` == "NaN", "-",`p-value`)) %>%
+  mutate(`p_val` = replace(p_val, `p_val` == "0", "<0.0001")) %>%
+  mutate(`week` = str_replace_all(`week`, " ", "")) %>%
+  mutate(`week` = as.numeric(`week`)) 
+  
+ 
+res_fin_insert$parameter <- str_trim(res_fin_insert$parameter)
+
+#write.xlsx(res_fin_insert, "res_fin_insert.xlsx")
+
+#На данном этапе требуется время для расчета. Ввиду невозможности публичного представления части функций, разработка таблицы закомментирована.
+#table_stat_all <- desc_stat(df1_imput_final, parameter, parameter_report, week, week_report,group,col_param,header,res_fin_insert)
+
+#write.xlsx(table_stat_all, "table_stat_all.xlsx")
+
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+#Вывод таблицы, доделать форматирование
+table_stat_all <- read_excel("table_stat_all.xlsx")
+
+table_stat_all %>%
+  flextable() %>%
+  theme_booktabs() %>%
+  align(j = 2:8, align = "center") %>%
+  merge_h(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("p-value (Friedman Test)", "Pairwise Comparisons (Nemenyi Test)")) %>%
+  merge_h(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("20 неделя",	"21 неделя",	"22 неделя",	"23 неделя",	"24 неделя",	"25 неделя",	"26 неделя",	"27 неделя",	"28 неделя",	"29 неделя",	"30 неделя",	"31 неделя",	"32 неделя",	"33 неделя",	"34 неделя",	"35 неделя",	"36 неделя",	"37 неделя",	"38 неделя",	"39 неделя",	"40 неделя",	"41 неделя",	"42 неделя")) %>%
+  bold(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("20 неделя",	"21 неделя",	"22 неделя",	"23 неделя",	"24 неделя",	"25 неделя",	"26 неделя",	"27 неделя",	"28 неделя",	"29 неделя",	"30 неделя",	"31 неделя",	"32 неделя",	"33 неделя",	"34 неделя",	"35 неделя",	"36 неделя",	"37 неделя",	"38 неделя",	"39 неделя",	"40 неделя",	"41 неделя",	"42 неделя")) %>%
+  italic(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("20 неделя",	"21 неделя",	"22 неделя",	"23 неделя",	"24 неделя",	"25 неделя",	"26 неделя",	"27 неделя",	"28 неделя",	"29 неделя",	"30 неделя",	"31 неделя",	"32 неделя",	"33 неделя",	"34 неделя",	"35 неделя",	"36 неделя",	"37 неделя",	"38 неделя",	"39 неделя",	"40 неделя",	"41 неделя",	"42 неделя")) %>%
+  bold(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("Длина тела", "Масса тела", "Мозг", "Сердце", "Лёгкие", "Печень", "Селезёнка", "Почки", "Тимус", "Надпочечники", "Поджелудочная железа", "Плацента", "Окружность головы", "Окружность груди")) %>%
+  italic(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("Длина тела", "Масса тела", "Мозг", "Сердце", "Лёгкие", "Печень", "Селезёнка", "Почки", "Тимус", "Надпочечники", "Поджелудочная железа", "Плацента", "Окружность головы", "Окружность груди")) %>%
+  hline(i = ~ `Неделя гестации/Параметр/Статистика` %in% c("95th percentile","p-value (Friedman Test)", "Pairwise Comparisons (Nemenyi Test)")) %>%
+  width(width = c(3, 1, 1, 1, 1, 1, 1, 1))
+
+
+
+```
+
