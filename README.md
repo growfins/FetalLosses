@@ -81,7 +81,7 @@ At the same time, we exclude the “deletion of NA” dataset from comparative a
 
 **(Example of graphical visualisation)**
 
-![Rplot04](https://user-images.githubusercontent.com/102663823/215138207-09ead217-6066-4549-a370-0af85584a951.svg)
+![Rplot2](https://user-images.githubusercontent.com/102663823/215253630-8dd4220d-caf2-46ab-9cff-482633484451.svg)
 
 #### Reference values assessment
 
